@@ -5,3 +5,13 @@ node_modules/
 .eslintcache
 __pycache__/
 *.pyc
+
+# Debian build output
+debian/gnome-shell-extension-codex-claude-usage/
+debian/.debhelper/
+debian/files
+debian/*.substvars
+debian/debhelper-build-stamp
+*.deb
+*.buildinfo
+*.changes

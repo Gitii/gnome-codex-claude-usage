@@ -47,6 +47,29 @@ the settings.
 
 ## Install
 
+### Debian package (Ubuntu 24.04 / GNOME 46, Ubuntu 26.04 / GNOME 50)
+
+Every [release](https://github.com/Gitii/gnome-codex-claude-usage/releases)
+ships one `.deb` per supported Ubuntu, built and tested on that Ubuntu by the
+`Package` workflow. Pick the file matching your release
+(`…~ubuntu24.04_all.deb` or `…~ubuntu26.04_all.deb`) and install it:
+
+```sh
+sudo apt install ./gnome-shell-extension-codex-claude-usage_*_all.deb
+```
+
+The package installs the extension system-wide under
+`/usr/share/gnome-shell/extensions/` and its schema under
+`/usr/share/glib-2.0/schemas/`. Log out and back in, then enable it:
+
+```sh
+gnome-extensions enable codex-claude-usage@gitii.github.io
+```
+
+The package has no compiled code, so either file works on any GNOME 46 to 51
+system with `gnome-shell` and `gir1.2-soup-3.0` installed. Remove it with
+`sudo apt remove gnome-shell-extension-codex-claude-usage`.
+
 ### From source
 
 ```sh
@@ -145,6 +168,26 @@ toolbox create -d fedora -r 42 gnome48
 toolbox enter gnome48
 sudo dnf install -y gnome-shell gnome-extensions-app python3 make glib2
 make test-nested
+```
+
+### Releasing
+
+Bump `version` and `version-name` in `metadata.json` and the top entry of
+`debian/changelog`, then push a tag:
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The `Package` workflow builds the `.deb` files in Ubuntu 24.04 and 26.04
+containers, runs the unit and provider tests in each, and attaches the
+packages to a GitHub release for the tag. Builds on ordinary pushes upload
+the same `.deb` files as workflow artifacts with a `+git<date>.<sha>`
+version. A local build needs `dpkg-dev` and `debhelper`:
+
+```sh
+dpkg-buildpackage -us -uc -b   # writes ../gnome-shell-extension-codex-claude-usage_*.deb
 ```
 
 ### Compatibility notes
