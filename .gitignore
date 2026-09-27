@@ -3,3 +3,5 @@ build/
 codex-claude-usage@gitii.github.io/schemas/gschemas.compiled
 node_modules/
 .eslintcache
+__pycache__/
+*.pyc
