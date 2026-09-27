@@ -1,0 +1,10 @@
+{
+  "name": "gnome-codex-claude-usage",
+  "private": true,
+  "description": "Dev tooling manifest only: lets Node treat the extension's .js files as ES modules for the unit tests. Not shipped.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "lint": "eslint ."
+  }
+}
