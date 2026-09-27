@@ -1,0 +1,5 @@
+build/
+*.shell-extension.zip
+codex-claude-usage@gitii.github.io/schemas/gschemas.compiled
+node_modules/
+.eslintcache

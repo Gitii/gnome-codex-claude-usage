@@ -1,0 +1,109 @@
+/* Panel */
+.ccu-box {
+  spacing: 8px;
+}
+
+.ccu-segment {
+  spacing: 4px;
+}
+
+.ccu-segment-icon {
+  padding: 0;
+  margin: 0;
+}
+
+.ccu-segment-label {
+  font-weight: bold;
+  font-size: 0.95em;
+}
+
+.ccu-panel-track {
+  height: 8px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.ccu-panel-fill {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.ccu-limit-reached {
+  color: #e01b24;
+}
+
+/* Menu */
+.ccu-section {
+  spacing: 6px;
+  min-width: 240px;
+}
+
+.ccu-section-header {
+  spacing: 8px;
+}
+
+.ccu-section-title {
+  font-weight: bold;
+}
+
+.ccu-section-status {
+  color: #a0a0a0;
+  font-size: 0.9em;
+}
+
+.ccu-window {
+  spacing: 3px;
+  padding-top: 4px;
+}
+
+.ccu-window-title {
+  font-size: 0.95em;
+}
+
+.ccu-window-percent {
+  font-weight: bold;
+}
+
+.ccu-track {
+  height: 7px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.ccu-fill {
+  height: 7px;
+  border-radius: 4px;
+}
+
+.ccu-reset,
+.ccu-info {
+  font-size: 0.85em;
+  color: #a0a0a0;
+}
+
+.ccu-message {
+  font-size: 0.9em;
+  color: #f6d32d;
+}
+
+/* Severity colours, judged on the used share */
+.usage-low {
+  background-color: #33d17a;
+}
+
+.usage-medium {
+  background-color: #f6d32d;
+}
+
+.usage-high {
+  background-color: #ff7800;
+}
+
+.usage-critical {
+  background-color: #e01b24;
+}
+
+.ccu-segment-label.usage-critical {
+  background-color: transparent;
+  color: #ff7b7b;
+}
