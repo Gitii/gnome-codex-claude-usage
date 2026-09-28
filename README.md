@@ -21,9 +21,9 @@ D-Bus daemon**: the extension is pure GJS and reads the OAuth tokens that the
 - Dropdown with a section per provider: 5-hour and weekly bars coloured by
   severity, "Resets in …" with a live countdown during the last five minutes,
   plan type, account e-mail, limit-reached warning.
-- Per-model quotas: any extra usage window the Claude API reports, such as the
-  weekly Fable or Opus limit on Max plans, is listed under the two standard
-  windows. Can be switched off in the settings.
+- Per-model quotas: scoped limits the Claude API reports, such as the weekly
+  Fable limit on Max plans, are listed under the two standard windows. Can be
+  switched off in the settings.
 - Per-provider error states (not logged in, login expired, network error) so
   one broken provider never hides the other.
 - Choose whether percentages mean **used** quota (Claude style) or

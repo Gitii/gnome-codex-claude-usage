@@ -55,17 +55,16 @@ let failed = false;
                 expect(codex.account === 'tester@example.com', 'codex email parsed');
                 expect(codex.windows[1].resetsAt > Date.now() / 1000, 'codex reset time in the future');
                 expect(claude.state === 'ok', 'claude fetch succeeds');
-                expect(claude.windows[0].usedPercent === 81.5, 'claude primary used 81.5%');
+                expect(claude.windows[0].usedPercent === 81.5, 'claude primary keeps decimal utilization');
                 expect(claude.windows[1].id === 'secondary', 'claude secondary window present');
                 expect(claude.windows[0].resetsAt !== null, 'claude reset time parsed from ISO 8601');
                 expect(claude.plan === 'max', 'claude subscription type parsed');
-                expect(claude.windows.length === 4, 'claude has 5h, weekly and two per-model windows');
-                expect(claude.windows[2].id === 'seven_day_fable' && claude.windows[2].usedPercent === 64,
-                    'claude Fable window parsed');
-                expect(claude.windows[2].title === 'Weekly · Fable', 'Fable window titled');
+                expect(claude.windows.length === 3, 'claude has 5h, weekly and the Fable window only');
+                expect(claude.windows[2].usedPercent === 64, 'claude Fable window parsed from limits');
+                expect(claude.windows[2].title === 'Weekly · Fable', 'Fable window titled from scope');
                 expect(claude.windows[2].standard === false, 'Fable window marked non-standard');
-                expect(!claude.windows.some(w => w.id === 'seven_day_sonnet'),
-                    'null-utilization window skipped');
+                expect(!claude.windows.some(w => /iguana|nimbus/.test(w.id)),
+                    'internal code-name keys are not shown');
                 break;
             case 'claude-expired':
                 expect(claude.state === 'expired', 'claude reports expired token without a request');

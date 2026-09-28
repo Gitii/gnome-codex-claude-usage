@@ -121,27 +121,34 @@ class Handler(BaseHTTPRequestHandler):
             if self._bearer() != CLAUDE_TOKEN:
                 return self._json(401, {"error": "unauthorized"})
             fmt = "%Y-%m-%dT%H:%M:%S+00:00"
+            iso = lambda secs: time.strftime(fmt, time.gmtime(now + secs))  # noqa: E731
+            five_hour = 100.0 if limit else 81.5
+            # Shape mirrors a real 2026 response: the `limits` array is the
+            # source of truth; the top-level keys next to five_hour/seven_day
+            # are internal code names and must not be shown.
             return self._json(200, {
-                "five_hour": {
-                    "utilization": 100.0 if limit else 81.5,
-                    "resets_at": time.strftime(fmt, time.gmtime(now + 2 * 3600 + 15 * 60)),
-                },
-                "seven_day": {
-                    "utilization": 23.0,
-                    "resets_at": time.strftime(fmt, time.gmtime(now + 5 * 86400)),
-                },
-                # Per-model windows as reported for Max plans; the extension
-                # must pick these up without knowing the key names in advance.
-                "seven_day_fable": {
-                    "utilization": 64.0,
-                    "resets_at": time.strftime(fmt, time.gmtime(now + 5 * 86400)),
-                },
-                "seven_day_opus": {
-                    "utilization": 12.0,
-                    "resets_at": time.strftime(fmt, time.gmtime(now + 5 * 86400)),
-                },
-                "seven_day_sonnet": {"utilization": None, "resets_at": None},
-                "extra_usage": {"is_enabled": False, "monthly_limit": None},
+                "five_hour": {"utilization": five_hour, "resets_at": iso(2 * 3600 + 15 * 60),
+                              "limit_dollars": None, "used_dollars": None, "locked_reason": None},
+                "seven_day": {"utilization": 23.0, "resets_at": iso(5 * 86400),
+                              "limit_dollars": None, "used_dollars": None, "locked_reason": None},
+                "seven_day_opus": None,
+                "seven_day_sonnet": None,
+                "iguana_necktie": {"utilization": 68.256, "resets_at": iso(37 * 86400),
+                                   "limit_dollars": 250, "used_dollars": 170.64, "locked_reason": None},
+                "nimbus_quill": {"utilization": 0.0, "resets_at": None,
+                                 "limit_dollars": None, "used_dollars": None, "locked_reason": None},
+                "cinder_cove": None,
+                "extra_usage": {"is_enabled": False, "monthly_limit": 0, "utilization": None},
+                "limits": [
+                    {"kind": "session", "group": "session", "percent": round(five_hour),
+                     "severity": "normal", "resets_at": iso(2 * 3600 + 15 * 60), "scope": None, "is_active": False},
+                    {"kind": "weekly_all", "group": "weekly", "percent": 23,
+                     "severity": "normal", "resets_at": iso(5 * 86400), "scope": None, "is_active": False},
+                    {"kind": "weekly_scoped", "group": "weekly", "percent": 64,
+                     "severity": "normal", "resets_at": iso(5 * 86400),
+                     "scope": {"model": {"id": None, "display_name": "Fable"}, "surface": None},
+                     "is_active": True},
+                ],
             })
         return self._json(404, {"error": "not found"})
 
