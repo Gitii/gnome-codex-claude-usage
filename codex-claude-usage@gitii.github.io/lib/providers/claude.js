@@ -11,7 +11,7 @@ import {HttpError} from '../http.js';
 import {readFirstJson} from '../credentials.js';
 import {
     STATE_ERROR, STATE_EXPIRED, STATE_NO_CREDENTIALS, STATE_OK,
-    errorUsage, makeWindow,
+    errorUsage, makeWindow, titleForKey,
 } from '../usage.js';
 
 export const ID = 'claude';
@@ -30,6 +30,66 @@ function isoToEpoch(value) {
         return null;
     const dt = GLib.DateTime.new_from_iso8601(value, GLib.TimeZone.new_utc());
     return dt ? dt.to_unix() : null;
+}
+
+// Preferred source: the `limits` array. Each entry has a kind ("session",
+// "weekly_all", "weekly_scoped", ...), an integer percent, resets_at and an
+// optional scope naming a model or surface. The scoped weekly entries are the
+// per-model quotas (e.g. Fable on Max plans).
+//
+// Fallback for older responses: the five_hour / seven_day objects. The other
+// top-level keys are internal code names and are never shown.
+const LIMIT_KINDS = {session: 'primary', weekly_all: 'secondary'};
+
+function scopeName(scope) {
+    return scope?.model?.display_name ?? scope?.surface?.display_name ??
+        scope?.model?.id ?? scope?.surface?.id ?? null;
+}
+
+function limitTitle(limit) {
+    const name = scopeName(limit.scope);
+    const group = limit.group === 'weekly' || String(limit.kind).startsWith('weekly') ? 'Weekly'
+        : limit.group === 'session' || limit.kind === 'session' ? '5-hour'
+            : titleForKey(String(limit.group ?? limit.kind));
+    return name ? `${group} · ${name}` : `${group} window`;
+}
+
+function isWindow(value) {
+    return value && typeof value === 'object' && typeof value.utilization === 'number';
+}
+
+export function parseWindows(payload) {
+    const windows = [];
+    if (Array.isArray(payload.limits) && payload.limits.length > 0) {
+        const standard = [];
+        const scoped = [];
+        for (const limit of payload.limits) {
+            if (!limit || typeof limit.percent !== 'number')
+                continue;
+            const resetsAt = isoToEpoch(limit.resets_at);
+            const id = LIMIT_KINDS[limit.kind];
+            if (id)
+                standard.push(makeWindow(id, limit.percent, resetsAt));
+            else
+                scoped.push(makeWindow(`${limit.kind}:${scopeName(limit.scope) ?? ''}`, limit.percent, resetsAt, limitTitle(limit)));
+        }
+        standard.sort((a, b) => (a.id === 'primary' ? -1 : 1) - (b.id === 'primary' ? -1 : 1));
+        // The limits array rounds to whole percent; the legacy objects carry
+        // decimals, so prefer those for the two standard windows when present.
+        for (const window of standard) {
+            const legacy = window.id === 'primary' ? payload.five_hour : payload.seven_day;
+            if (isWindow(legacy))
+                window.usedPercent = makeWindow(window.id, legacy.utilization, null).usedPercent;
+        }
+        windows.push(...standard, ...scoped);
+        if (windows.length > 0)
+            return windows;
+    }
+    if (isWindow(payload.five_hour))
+        windows.push(makeWindow('primary', payload.five_hour.utilization, isoToEpoch(payload.five_hour.resets_at)));
+    if (isWindow(payload.seven_day))
+        windows.push(makeWindow('secondary', payload.seven_day.utilization, isoToEpoch(payload.seven_day.resets_at)));
+    return windows;
 }
 
 /**
@@ -61,11 +121,7 @@ export async function fetchUsage(http, settings) {
         return errorUsage(STATE_ERROR, e.message);
     }
 
-    const windows = [];
-    if (payload.five_hour)
-        windows.push(makeWindow('primary', payload.five_hour.utilization, isoToEpoch(payload.five_hour.resets_at)));
-    if (payload.seven_day)
-        windows.push(makeWindow('secondary', payload.seven_day.utilization, isoToEpoch(payload.seven_day.resets_at)));
+    const windows = parseWindows(payload);
 
     if (windows.length === 0)
         return errorUsage(STATE_ERROR, 'Unexpected response from the usage API');

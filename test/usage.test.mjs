@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    clampPercent, displayPercent, formatReset, makeWindow, panelWindow, severityClass,
+    clampPercent, displayPercent, formatReset, makeWindow, panelWindow, severityClass, titleForKey,
 } from '../codex-claude-usage@gitii.github.io/lib/usage.js';
 
 test('clampPercent bounds and coerces', () => {
@@ -57,4 +57,26 @@ test('formatReset granularity', () => {
     assert.equal(formatReset(now + 20 * 60), 'in 20m');
     assert.equal(formatReset(now + 2 * 3600 + 15 * 60), 'in 2h 15m');
     assert.equal(formatReset(now + 3 * 86400 + 4 * 3600), 'in 3d 4h');
+});
+
+test('titleForKey humanises per-model keys', () => {
+    assert.equal(titleForKey('seven_day_fable'), 'Weekly · Fable');
+    assert.equal(titleForKey('seven_day_opus'), 'Weekly · Opus');
+    assert.equal(titleForKey('five_hour_sonnet'), '5-hour · Sonnet');
+    assert.equal(titleForKey('seven_day'), 'Weekly window');
+    assert.equal(titleForKey('some_other_thing'), 'Some Other Thing');
+    assert.equal(makeWindow('seven_day_fable', 5, null).standard, false);
+    assert.equal(makeWindow('primary', 5, null).standard, true);
+});
+
+test('panelWindow max ignores per-model windows', () => {
+    const usage = {
+        state: 'ok',
+        windows: [
+            makeWindow('primary', 20, null),
+            makeWindow('secondary', 30, null),
+            makeWindow('seven_day_fable', 99, null),
+        ],
+    };
+    assert.equal(panelWindow(usage, 'max').id, 'secondary');
 });

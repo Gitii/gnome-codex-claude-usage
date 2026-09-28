@@ -76,6 +76,11 @@ export default class CodexClaudeUsagePreferences extends ExtensionPreferences {
             ]);
         addSwitchRow(panel, settings, 'show-icon', 'Show icons', 'Show the provider icons in the top bar');
 
+        const menu = new Adw.PreferencesGroup({title: 'Menu'});
+        page.add(menu);
+        addSwitchRow(menu, settings, 'show-model-windows', 'Per-model windows',
+            'Also list model-specific quotas the provider reports, such as the weekly Fable or Opus limit');
+
         const refresh = new Adw.PreferencesGroup({title: 'Refresh'});
         page.add(refresh);
         const spin = new Gtk.SpinButton({

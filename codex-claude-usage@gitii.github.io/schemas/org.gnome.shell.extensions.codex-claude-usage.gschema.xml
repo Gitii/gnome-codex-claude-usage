@@ -47,6 +47,11 @@
       <summary>Window shown in the panel</summary>
       <description>Which rate-limit window drives the panel value: the 5-hour window, the weekly window, or whichever is more used.</description>
     </key>
+    <key name="show-model-windows" type="b">
+      <default>true</default>
+      <summary>Show per-model windows</summary>
+      <description>Whether to show additional per-model usage windows (for example the weekly Fable or Opus quota) in the menu, in addition to the 5-hour and weekly windows.</description>
+    </key>
     <key name="show-icon" type="b">
       <default>true</default>
       <summary>Show provider icons</summary>

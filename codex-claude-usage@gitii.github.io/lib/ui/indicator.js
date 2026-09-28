@@ -132,7 +132,7 @@ export const UsageIndicator = GObject.registerClass({
         this.menu.addMenuItem(settingsItem);
 
         this._settingsIds = ['show-codex', 'show-claude', 'display-mode', 'show-icon',
-            'percent-mode', 'panel-window'].map(key =>
+            'percent-mode', 'panel-window', 'show-model-windows'].map(key =>
             this._settings.connect(`changed::${key}`, () => this._applySettings()));
         this._applySettings();
     }
@@ -143,6 +143,7 @@ export const UsageIndicator = GObject.registerClass({
             showIcon: this._settings.get_boolean('show-icon'),
             percentMode: this._settings.get_string('percent-mode'),
             panelWindowMode: this._settings.get_string('panel-window'),
+            showModelWindows: this._settings.get_boolean('show-model-windows'),
         };
     }
 
@@ -162,7 +163,7 @@ export const UsageIndicator = GObject.registerClass({
             this._separators.get(id).visible = enabled;
             const usage = this._usage.get(id);
             if (usage)
-                section.setUsage(usage, options.percentMode);
+                section.setUsage(usage, options.percentMode, options.showModelWindows);
         }
     }
 
@@ -183,7 +184,7 @@ export const UsageIndicator = GObject.registerClass({
         this._usage.set(id, usage);
         const options = this._displayOptions();
         this._segments.get(id)?.setUsage(usage, options);
-        this._sections.get(id)?.setUsage(usage, options.percentMode);
+        this._sections.get(id)?.setUsage(usage, options.percentMode, options.showModelWindows);
         this._syncCountdown();
     }
 
