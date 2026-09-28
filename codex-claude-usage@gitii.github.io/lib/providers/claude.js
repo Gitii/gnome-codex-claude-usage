@@ -32,6 +32,29 @@ function isoToEpoch(value) {
     return dt ? dt.to_unix() : null;
 }
 
+// The two standard windows come first; any other object with a numeric
+// utilization (seven_day_opus, seven_day_fable, ...) is a per-model window and
+// is shown after them under a title derived from its key.
+const STANDARD_KEYS = {five_hour: 'primary', seven_day: 'secondary'};
+
+function isWindow(value) {
+    return value && typeof value === 'object' && typeof value.utilization === 'number';
+}
+
+export function parseWindows(payload) {
+    const windows = [];
+    for (const [key, id] of Object.entries(STANDARD_KEYS)) {
+        if (isWindow(payload[key]))
+            windows.push(makeWindow(id, payload[key].utilization, isoToEpoch(payload[key].resets_at)));
+    }
+    for (const [key, value] of Object.entries(payload)) {
+        if (key in STANDARD_KEYS || !isWindow(value))
+            continue;
+        windows.push(makeWindow(key, value.utilization, isoToEpoch(value.resets_at)));
+    }
+    return windows;
+}
+
 /**
  * @param {import('../http.js').HttpClient} http
  * @param {Gio.Settings} settings
@@ -61,11 +84,7 @@ export async function fetchUsage(http, settings) {
         return errorUsage(STATE_ERROR, e.message);
     }
 
-    const windows = [];
-    if (payload.five_hour)
-        windows.push(makeWindow('primary', payload.five_hour.utilization, isoToEpoch(payload.five_hour.resets_at)));
-    if (payload.seven_day)
-        windows.push(makeWindow('secondary', payload.seven_day.utilization, isoToEpoch(payload.seven_day.resets_at)));
+    const windows = parseWindows(payload);
 
     if (windows.length === 0)
         return errorUsage(STATE_ERROR, 'Unexpected response from the usage API');

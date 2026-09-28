@@ -126,8 +126,9 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
     /**
      * @param {import('../usage.js').ProviderUsage} usage
      * @param {'used'|'remaining'} percentMode
+     * @param {boolean} [showModelWindows] - include per-model extra windows
      */
-    setUsage(usage, percentMode) {
+    setUsage(usage, percentMode, showModelWindows = true) {
         this._usage = usage;
         this._percentMode = percentMode;
 
@@ -147,6 +148,8 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
 
         const seen = new Set();
         for (const window of usage.windows) {
+            if (!showModelWindows && !window.standard)
+                continue;
             let bar = this._bars.get(window.id);
             if (!bar) {
                 bar = new UsageBar(window.title);

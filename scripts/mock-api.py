@@ -130,6 +130,18 @@ class Handler(BaseHTTPRequestHandler):
                     "utilization": 23.0,
                     "resets_at": time.strftime(fmt, time.gmtime(now + 5 * 86400)),
                 },
+                # Per-model windows as reported for Max plans; the extension
+                # must pick these up without knowing the key names in advance.
+                "seven_day_fable": {
+                    "utilization": 64.0,
+                    "resets_at": time.strftime(fmt, time.gmtime(now + 5 * 86400)),
+                },
+                "seven_day_opus": {
+                    "utilization": 12.0,
+                    "resets_at": time.strftime(fmt, time.gmtime(now + 5 * 86400)),
+                },
+                "seven_day_sonnet": {"utilization": None, "resets_at": None},
+                "extra_usage": {"is_enabled": False, "monthly_limit": None},
             })
         return self._json(404, {"error": "not found"})
 

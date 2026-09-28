@@ -29,6 +29,30 @@ export const WINDOW_TITLES = {
     secondary: 'Weekly window',
 };
 
+/**
+ * Turn an API key such as "seven_day_fable" into a readable title.
+ * Known model names are capitalised; anything else is humanised.
+ */
+export function titleForKey(key) {
+    const models = {opus: 'Opus', sonnet: 'Sonnet', haiku: 'Haiku', fable: 'Fable', mythos: 'Mythos'};
+    let k = String(key);
+    let period = null;
+    if (k.startsWith('seven_day')) {
+        period = 'Weekly';
+        k = k.slice('seven_day'.length);
+    } else if (k.startsWith('five_hour')) {
+        period = '5-hour';
+        k = k.slice('five_hour'.length);
+    }
+    const rest = k.replace(/^_+/, '').split('_').filter(Boolean)
+        .map(w => models[w] ?? w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    if (period && rest)
+        return `${period} · ${rest}`;
+    if (period)
+        return `${period} window`;
+    return rest || String(key);
+}
+
 export function clampPercent(value) {
     const n = Number(value);
     if (!Number.isFinite(n))
@@ -36,10 +60,12 @@ export function clampPercent(value) {
     return Math.max(0, Math.min(100, n));
 }
 
-export function makeWindow(id, usedPercent, resetsAt) {
+export function makeWindow(id, usedPercent, resetsAt, title = null) {
     return {
         id,
-        title: WINDOW_TITLES[id] ?? id,
+        title: title ?? WINDOW_TITLES[id] ?? titleForKey(id),
+        /** true for the two standard windows, false for per-model extras */
+        standard: id === 'primary' || id === 'secondary',
         usedPercent: clampPercent(usedPercent),
         resetsAt: Number.isFinite(resetsAt) && resetsAt > 0 ? Math.floor(resetsAt) : null,
     };
@@ -59,8 +85,11 @@ export function errorUsage(state, message) {
 export function panelWindow(usage, mode) {
     if (!usage || usage.windows.length === 0)
         return null;
-    if (mode === 'max')
-        return usage.windows.reduce((a, b) => (b.usedPercent > a.usedPercent ? b : a));
+    if (mode === 'max') {
+        const candidates = usage.windows.filter(w => w.standard);
+        return (candidates.length ? candidates : usage.windows)
+            .reduce((a, b) => (b.usedPercent > a.usedPercent ? b : a));
+    }
     return usage.windows.find(w => w.id === mode) ?? usage.windows[0];
 }
 

@@ -21,6 +21,9 @@ D-Bus daemon**: the extension is pure GJS and reads the OAuth tokens that the
 - Dropdown with a section per provider: 5-hour and weekly bars coloured by
   severity, "Resets in …" with a live countdown during the last five minutes,
   plan type, account e-mail, limit-reached warning.
+- Per-model quotas: any extra usage window the Claude API reports, such as the
+  weekly Fable or Opus limit on Max plans, is listed under the two standard
+  windows. Can be switched off in the settings.
 - Per-provider error states (not logged in, login expired, network error) so
   one broken provider never hides the other.
 - Choose whether percentages mean **used** quota (Claude style) or
@@ -106,6 +109,7 @@ Open them from the dropdown ("Settings…") or with
 | Percentages show | used, remaining | used |
 | Panel value | 5-hour window, weekly window, whichever is more used | 5-hour |
 | Show icons | on/off | on |
+| Per-model windows | on/off | on |
 | Refresh interval | 30 to 3600 s | 180 s |
 | Proxy URL | e.g. `http://localhost:3128` | system default |
 
@@ -208,4 +212,6 @@ dpkg-buildpackage -us -uc -b   # writes ../gnome-shell-extension-codex-claude-us
 
 ## License
 
-GPL-3.0-or-later. Not affiliated with, funded by or endorsed by OpenAI or Anthropic.
+GPL-3.0-or-later. The Claude and Codex brand marks in `icons/` are the
+monochrome icons from [thesvg.org](https://github.com/glincker/thesvg) (MIT);
+the trademarks belong to Anthropic and OpenAI respectively. Not affiliated with, funded by or endorsed by OpenAI or Anthropic.

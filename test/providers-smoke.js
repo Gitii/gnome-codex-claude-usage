@@ -59,6 +59,13 @@ let failed = false;
                 expect(claude.windows[1].id === 'secondary', 'claude secondary window present');
                 expect(claude.windows[0].resetsAt !== null, 'claude reset time parsed from ISO 8601');
                 expect(claude.plan === 'max', 'claude subscription type parsed');
+                expect(claude.windows.length === 4, 'claude has 5h, weekly and two per-model windows');
+                expect(claude.windows[2].id === 'seven_day_fable' && claude.windows[2].usedPercent === 64,
+                    'claude Fable window parsed');
+                expect(claude.windows[2].title === 'Weekly · Fable', 'Fable window titled');
+                expect(claude.windows[2].standard === false, 'Fable window marked non-standard');
+                expect(!claude.windows.some(w => w.id === 'seven_day_sonnet'),
+                    'null-utilization window skipped');
                 break;
             case 'claude-expired':
                 expect(claude.state === 'expired', 'claude reports expired token without a request');
