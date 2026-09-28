@@ -2,10 +2,17 @@
   "uuid": "codex-claude-usage@gitii.github.io",
   "name": "Codex & Claude Usage",
   "description": "Shows Codex (ChatGPT) and Claude Code plan usage in the top bar: 5-hour and weekly limits, reset times, plan and account. Reads the tokens stored by the codex and claude CLIs; no background service needed. This extension talks to openai.com and anthropic.com services and is not affiliated with, funded by or endorsed by OpenAI or Anthropic.",
-  "shell-version": ["46", "47", "48", "49", "50", "51"],
+  "shell-version": [
+    "46",
+    "47",
+    "48",
+    "49",
+    "50",
+    "51"
+  ],
   "url": "https://github.com/Gitii/gnome-codex-claude-usage",
   "settings-schema": "org.gnome.shell.extensions.codex-claude-usage",
   "gettext-domain": "codex-claude-usage",
-  "version-name": "1.0.0",
-  "version": 1
+  "version-name": "1.1.0",
+  "version": 2
 }

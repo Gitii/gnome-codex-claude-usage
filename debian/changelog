@@ -1,5 +1,9 @@
-gnome-shell-extension-codex-claude-usage (1.0.0-1) unstable; urgency=medium
+gnome-shell-extension-codex-claude-usage (1.1.0-1) unstable; urgency=medium
 
-  * Initial release.
+  * Show per-model Claude quotas (e.g. the weekly Fable limit) from the
+    usage API's limits array; internal code-name keys are never shown.
+  * New setting "Per-model windows" to hide the scoped windows.
+  * Use the monochrome Claude and Codex brand marks from thesvg.org (MIT).
 
- -- Gitii <gitii@users.noreply.github.com>  Sun, 27 Sep 2026 12:00:00 +0000
+ -- Gitii <gitii@users.noreply.github.com>  Mon, 28 Sep 2026 14:13:03 +0000
+
