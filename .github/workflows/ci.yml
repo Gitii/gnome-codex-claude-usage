@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install glib tools and gjs
+        run: sudo apt-get update && sudo apt-get install -y libglib2.0-bin zip gjs gir1.2-soup-3.0
+      - name: Syntax, schema and unit tests
+        run: make check
+      - name: Lint
+        run: make lint
+      - name: Provider integration tests (gjs + mock API)
+        run: make test-providers
+      - name: Build zip
+        run: make zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: build/*.zip

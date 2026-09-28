@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+export DH_VERBOSE = 1
+
+UUID := codex-claude-usage@gitii.github.io
+PKG  := debian/gnome-shell-extension-codex-claude-usage
+EXT  := $(PKG)/usr/share/gnome-shell/extensions/$(UUID)
+SCH  := $(PKG)/usr/share/glib-2.0/schemas
+
+%:
+	dh $@
+
+# Nothing to compile; the Makefile's default target builds a zip we do not need.
+override_dh_auto_build:
+override_dh_auto_clean:
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -d $(EXT)/lib/providers $(EXT)/lib/ui $(EXT)/icons $(SCH)
+	install -m 0644 $(UUID)/extension.js $(UUID)/prefs.js $(UUID)/metadata.json $(UUID)/stylesheet.css $(EXT)/
+	install -m 0644 $(UUID)/lib/*.js $(EXT)/lib/
+	install -m 0644 $(UUID)/lib/providers/*.js $(EXT)/lib/providers/
+	install -m 0644 $(UUID)/lib/ui/*.js $(EXT)/lib/ui/
+	install -m 0644 $(UUID)/icons/*.svg $(EXT)/icons/
+	# System-wide installs use the shared schema directory; GNOME Shell falls
+	# back to it when the extension has no schemas/ folder of its own.
+	install -m 0644 $(UUID)/schemas/*.gschema.xml $(SCH)/

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="codex-claude-usage">
+  <enum id="org.gnome.shell.extensions.codex-claude-usage.display-mode">
+    <value nick="text" value="0"/>
+    <value nick="bar" value="1"/>
+    <value nick="both" value="2"/>
+  </enum>
+  <enum id="org.gnome.shell.extensions.codex-claude-usage.percent-mode">
+    <value nick="used" value="0"/>
+    <value nick="remaining" value="1"/>
+  </enum>
+  <enum id="org.gnome.shell.extensions.codex-claude-usage.panel-window">
+    <value nick="primary" value="0"/>
+    <value nick="secondary" value="1"/>
+    <value nick="max" value="2"/>
+  </enum>
+
+  <schema id="org.gnome.shell.extensions.codex-claude-usage" path="/org/gnome/shell/extensions/codex-claude-usage/">
+    <key name="show-codex" type="b">
+      <default>true</default>
+      <summary>Show Codex usage</summary>
+      <description>Whether to show the Codex (ChatGPT) provider in the panel and menu.</description>
+    </key>
+    <key name="show-claude" type="b">
+      <default>true</default>
+      <summary>Show Claude usage</summary>
+      <description>Whether to show the Claude Code provider in the panel and menu.</description>
+    </key>
+    <key name="refresh-interval" type="i">
+      <range min="30" max="3600"/>
+      <default>180</default>
+      <summary>Refresh interval</summary>
+      <description>How often to fetch usage data, in seconds.</description>
+    </key>
+    <key name="display-mode" enum="org.gnome.shell.extensions.codex-claude-usage.display-mode">
+      <default>'text'</default>
+      <summary>Panel display mode</summary>
+      <description>Show the usage in the panel as text, as a small progress bar, or both.</description>
+    </key>
+    <key name="percent-mode" enum="org.gnome.shell.extensions.codex-claude-usage.percent-mode">
+      <default>'used'</default>
+      <summary>Percentage semantics</summary>
+      <description>Show percentages as used quota (Claude style) or remaining quota (Codex style).</description>
+    </key>
+    <key name="panel-window" enum="org.gnome.shell.extensions.codex-claude-usage.panel-window">
+      <default>'primary'</default>
+      <summary>Window shown in the panel</summary>
+      <description>Which rate-limit window drives the panel value: the 5-hour window, the weekly window, or whichever is more used.</description>
+    </key>
+    <key name="show-icon" type="b">
+      <default>true</default>
+      <summary>Show provider icons</summary>
+      <description>Whether to show the provider icons in the panel.</description>
+    </key>
+    <key name="proxy-url" type="s">
+      <default>''</default>
+      <summary>Proxy URL</summary>
+      <description>HTTP(S) proxy URL used for API requests, for example http://localhost:3128. Leave empty to use the system default.</description>
+    </key>
+    <key name="codex-usage-url" type="s">
+      <default>'https://chatgpt.com/backend-api/wham/usage'</default>
+      <summary>Codex usage endpoint</summary>
+      <description>Endpoint used to fetch Codex usage. Only change this for testing against a mock server.</description>
+    </key>
+    <key name="codex-token-url" type="s">
+      <default>'https://auth.openai.com/oauth/token'</default>
+      <summary>Codex token endpoint</summary>
+      <description>OAuth token endpoint used to refresh an expired Codex access token in memory. Only change this for testing.</description>
+    </key>
+    <key name="claude-usage-url" type="s">
+      <default>'https://api.anthropic.com/api/oauth/usage'</default>
+      <summary>Claude usage endpoint</summary>
+      <description>Endpoint used to fetch Claude Code usage. Only change this for testing against a mock server.</description>
+    </key>
+  </schema>
+</schemalist>

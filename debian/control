@@ -1,0 +1,23 @@
+Source: gnome-shell-extension-codex-claude-usage
+Section: gnome
+Priority: optional
+Maintainer: Gitii <gitii@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/Gitii/gnome-codex-claude-usage
+Rules-Requires-Root: no
+
+Package: gnome-shell-extension-codex-claude-usage
+Architecture: all
+Depends: ${misc:Depends},
+         gnome-shell (>= 46),
+         gnome-shell (<< 52),
+         gir1.2-soup-3.0
+Description: GNOME Shell indicator for Codex and Claude Code plan usage
+ Shows how much of your Codex (ChatGPT) and Claude Code plan quota you have
+ used in the GNOME top bar: 5-hour and weekly windows, reset times, plan and
+ account for each provider.
+ .
+ The extension reads the OAuth tokens stored by the codex and claude
+ command-line tools; no background service is needed. It is not affiliated
+ with OpenAI or Anthropic.
