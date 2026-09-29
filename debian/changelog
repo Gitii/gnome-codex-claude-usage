@@ -1,7 +1,6 @@
-gnome-shell-extension-codex-claude-usage (1.1.1-1) unstable; urgency=medium
+gnome-shell-extension-codex-claude-usage (1.1.2-1) unstable; urgency=medium
 
-  * Fix usage bars in the menu and panel under-reporting usage: the fill is
-    now sized as a fraction of the track's real width.
+  * Centre the dropdown menu on the panel button.
 
- -- Gitii <gitii@users.noreply.github.com>  Tue, 29 Sep 2026 15:52:10 +0000
+ -- Gitii <gitii@users.noreply.github.com>  Tue, 29 Sep 2026 16:13:34 +0000
 
