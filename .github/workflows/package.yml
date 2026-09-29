@@ -10,6 +10,14 @@ on:
     tags: ['v*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: >-
+          Create a GitHub release with this tag (e.g. v1.1.2) from the chosen
+          branch. The tag is created by the release job and must match the
+          version in debian/changelog. Leave empty for a plain build.
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -60,11 +68,19 @@ jobs:
         id: version
         run: |
           . /etc/os-release
+          changelog="$(dpkg-parsechangelog -S Version | sed 's/-[^-]*$//')"
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             upstream="${GITHUB_REF#refs/tags/v}"
             debver="${upstream}-1~ubuntu${VERSION_ID}"
+          elif [[ -n "$RELEASE_TAG" ]]; then
+            upstream="${RELEASE_TAG#v}"
+            if [[ "$upstream" != "$changelog" ]]; then
+              echo "release_tag $RELEASE_TAG does not match debian/changelog version $changelog"
+              exit 1
+            fi
+            debver="${upstream}-1~ubuntu${VERSION_ID}"
           else
-            upstream="$(dpkg-parsechangelog -S Version | sed 's/-[^-]*$//')"
+            upstream="$changelog"
             debver="${upstream}-0+git$(date -u +%Y%m%d).${GITHUB_SHA::7}~ubuntu${VERSION_ID}"
           fi
           dch -b -v "$debver" -D "$VERSION_CODENAME" --force-distribution \
@@ -73,6 +89,7 @@ jobs:
         env:
           DEBEMAIL: gitii@users.noreply.github.com
           DEBFULLNAME: Gitii
+          RELEASE_TAG: ${{ inputs.release_tag }}
         shell: bash
 
       - name: Build .deb
@@ -90,9 +107,11 @@ jobs:
           path: dist/*.deb
           if-no-files-found: error
 
+  # Runs on a v* tag push, or on manual dispatch with release_tag set (the
+  # action then creates the tag on the dispatched commit).
   release:
     name: GitHub release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
     needs: deb
     runs-on: ubuntu-latest
     steps:
@@ -103,5 +122,7 @@ jobs:
       - run: ls -l dist
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          target_commitish: ${{ github.sha }}
           files: dist/*.deb
           generate_release_notes: true

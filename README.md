@@ -186,7 +186,12 @@ git push origin v1.0.0
 
 The `Package` workflow builds the `.deb` files in Ubuntu 24.04 and 26.04
 containers, runs the unit and provider tests in each, and attaches the
-packages to a GitHub release for the tag. Builds on ordinary pushes upload
+packages to a GitHub release for the tag.
+
+Alternatively run the `Package` workflow manually (Actions, "Run
+workflow") on `main` with `release_tag` set to the new tag, e.g. `v1.1.2`.
+The release job then creates the tag and the release itself. The tag must
+match the version at the top of `debian/changelog`. Builds on ordinary pushes upload
 the same `.deb` files as workflow artifacts with a `+git<date>.<sha>`
 version. A local build needs `dpkg-dev` and `debhelper`:
 
