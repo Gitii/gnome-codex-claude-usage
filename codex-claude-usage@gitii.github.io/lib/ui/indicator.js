@@ -98,7 +98,9 @@ export const UsageIndicator = GObject.registerClass({
      * @param {() => void} params.onSettings - open preferences
      */
     _init({settings, iconDir, providers, onRefresh, onSettings}) {
-        super._init(0.0, 'Codex & Claude Usage');
+        // 0.5 centres the menu on the button; 0.0 would anchor the menu's
+        // left edge to the button's centre, which looks off with two segments.
+        super._init(0.5, 'Codex & Claude Usage');
         this._settings = settings;
         this._usage = new Map();
         this._segments = new Map();
