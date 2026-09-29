@@ -11,7 +11,7 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {boxLayout} from '../compat.js';
-import {ProviderSection} from './section.js';
+import {ProviderSection, UsageTrack} from './section.js';
 import {
     COUNTDOWN_THRESHOLD_SEC, STATE_OK,
     displayPercent, panelWindow, secondsUntil, severityClass,
@@ -32,12 +32,12 @@ class PanelSegment extends St.BoxLayout {
         });
         this.add_child(this._icon);
 
-        this._track = new St.Widget({
+        this._track = new UsageTrack({
             style_class: 'ccu-panel-track',
             width: PANEL_BAR_WIDTH,
             y_align: Clutter.ActorAlign.CENTER,
         });
-        this._fill = new St.Widget({style_class: 'ccu-panel-fill usage-low', width: 0});
+        this._fill = new St.Widget({style_class: 'ccu-panel-fill usage-low'});
         this._track.add_child(this._fill);
         this.add_child(this._track);
 
@@ -64,12 +64,12 @@ class PanelSegment extends St.BoxLayout {
 
         if (!usage) {
             this._label.text = '…';
-            this._fill.width = 0;
+            this._track.fraction = 0;
             return;
         }
         if (usage.state !== STATE_OK) {
             this._label.text = usage.state === 'error' ? '!' : '?';
-            this._fill.width = 0;
+            this._track.fraction = 0;
             return;
         }
 
@@ -77,7 +77,7 @@ class PanelSegment extends St.BoxLayout {
         const used = window?.usedPercent ?? 0;
         const shown = Math.round(displayPercent(used, percentMode));
         this._label.text = `${shown}%`;
-        this._fill.width = Math.round(PANEL_BAR_WIDTH * used / 100);
+        this._track.fraction = used / 100;
         this._fill.add_style_class_name(severityClass(used));
         if (used >= 90)
             this._label.add_style_class_name(severityClass(used));

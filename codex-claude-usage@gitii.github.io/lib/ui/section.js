@@ -13,8 +13,43 @@ import {
     STATE_OK, displayPercent, formatReset, severityClass,
 } from '../usage.js';
 
-const BAR_WIDTH = 220;
 const SEVERITIES = ['usage-low', 'usage-medium', 'usage-high', 'usage-critical'];
+
+/**
+ * A track that allocates its single child (the fill) to a fraction of its
+ * own content width, so the bar is correct however wide the menu gets.
+ */
+export const UsageTrack = GObject.registerClass(
+class UsageTrack extends St.Widget {
+    _init(params) {
+        super._init(params);
+        this._fraction = 0;
+    }
+
+    set fraction(value) {
+        this._fraction = Math.max(0, Math.min(1, Number(value) || 0));
+        this.queue_relayout();
+    }
+
+    get fraction() {
+        return this._fraction;
+    }
+
+    vfunc_allocate(box) {
+        this.set_allocation(box);
+        const content = this.get_theme_node().get_content_box(box);
+        const fill = this.get_first_child();
+        if (!fill)
+            return;
+        const width = Math.round((content.x2 - content.x1) * this._fraction);
+        const childBox = new Clutter.ActorBox();
+        childBox.x1 = content.x1;
+        childBox.y1 = content.y1;
+        childBox.x2 = content.x1 + width;
+        childBox.y2 = content.y2;
+        fill.allocate(childBox);
+    }
+});
 
 export const UsageBar = GObject.registerClass(
 class UsageBar extends St.BoxLayout {
@@ -37,8 +72,8 @@ class UsageBar extends St.BoxLayout {
         header.add_child(this._percent);
         this.add_child(header);
 
-        this._track = new St.Widget({style_class: 'ccu-track', width: BAR_WIDTH});
-        this._fill = new St.Widget({style_class: 'ccu-fill usage-low', width: 0});
+        this._track = new UsageTrack({style_class: 'ccu-track', x_expand: true});
+        this._fill = new St.Widget({style_class: 'ccu-fill usage-low'});
         this._track.add_child(this._fill);
         this.add_child(this._track);
 
@@ -51,7 +86,7 @@ class UsageBar extends St.BoxLayout {
         const shown = displayPercent(window.usedPercent, percentMode);
         const suffix = percentMode === 'remaining' ? 'left' : 'used';
         this._percent.text = `${formatPercent(shown)}% ${suffix}`;
-        this._fill.width = Math.round(BAR_WIDTH * window.usedPercent / 100);
+        this._track.fraction = window.usedPercent / 100;
         for (const cls of SEVERITIES)
             this._fill.remove_style_class_name(cls);
         this._fill.add_style_class_name(severityClass(window.usedPercent));
