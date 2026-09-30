@@ -116,6 +116,13 @@ class Handler(BaseHTTPRequestHandler):
                         "reset_at": now + 3 * 86400 + 4 * 3600,
                     },
                 },
+                "code_review_rate_limit": None,
+                "additional_rate_limits": None,
+                "credits": {"has_credits": True, "unlimited": False, "balance": "199.93"},
+                "rate_limit_reset_credits": {
+                    "available_count": 2,
+                    "applicable_available_count": 0,
+                },
             })
         if self.path.startswith("/api/oauth/usage"):
             if self._bearer() != CLAUDE_TOKEN:

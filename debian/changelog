@@ -1,6 +1,8 @@
-gnome-shell-extension-codex-claude-usage (1.1.2-1) unstable; urgency=medium
+gnome-shell-extension-codex-claude-usage (1.2.0-1) unstable; urgency=medium
 
-  * Centre the dropdown menu on the panel button.
+  * Show the number of banked Codex rate-limit resets.
+  * Title Codex windows by the length the API reports (a weekly-only plan
+    was labelled "5-hour window").
 
- -- Gitii <gitii@users.noreply.github.com>  Tue, 29 Sep 2026 16:13:34 +0000
+ -- Gitii <gitii@users.noreply.github.com>  Wed, 30 Sep 2026 07:38:14 +0000
 

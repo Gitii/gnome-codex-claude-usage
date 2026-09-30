@@ -54,6 +54,10 @@ let failed = false;
                 expect(codex.plan === 'plus', 'codex plan parsed');
                 expect(codex.account === 'tester@example.com', 'codex email parsed');
                 expect(codex.windows[1].resetsAt > Date.now() / 1000, 'codex reset time in the future');
+                expect(codex.windows[0].title === '5-hour window' && codex.windows[1].title === 'Weekly window',
+                    'codex window titles derived from limit_window_seconds');
+                expect(codex.extras.length === 1 && codex.extras[0].label === 'Banked resets' &&
+                    codex.extras[0].value === '2 (0 usable now)', 'codex banked resets parsed');
                 expect(claude.state === 'ok', 'claude fetch succeeds');
                 expect(claude.windows[0].usedPercent === 81.5, 'claude primary keeps decimal utilization');
                 expect(claude.windows[1].id === 'secondary', 'claude secondary window present');

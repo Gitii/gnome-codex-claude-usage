@@ -137,6 +137,10 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
         this._barsBox = boxLayout({vertical: true, x_expand: true});
         box.add_child(this._barsBox);
 
+        this._extras = new St.Label({text: '', style_class: 'ccu-info'});
+        this._extras.hide();
+        box.add_child(this._extras);
+
         this._info = new St.Label({text: '', style_class: 'ccu-info'});
         this._info.clutter_text.ellipsize = Pango.EllipsizeMode.END;
         this._info.hide();
@@ -172,6 +176,7 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
                 : usage.state === 'expired' ? 'Login expired' : 'Error';
             this._barsBox.hide();
             this._info.hide();
+            this._extras.hide();
             this._message.text = usage.message ?? '';
             this._message.show();
             return;
@@ -200,6 +205,10 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
                 this._bars.delete(id);
             }
         }
+
+        const extras = (usage.extras ?? []).map(e => `${e.label}: ${e.value}`);
+        this._extras.text = extras.join(' · ');
+        this._extras.visible = extras.length > 0;
 
         const parts = [];
         if (usage.plan)

@@ -11,7 +11,7 @@ import {HttpError} from '../http.js';
 import {decodeJwtPayload, readFirstJson} from '../credentials.js';
 import {
     STATE_ERROR, STATE_EXPIRED, STATE_NO_CREDENTIALS, STATE_OK,
-    errorUsage, makeWindow,
+    errorUsage, makeWindow, titleForWindowSeconds,
 } from '../usage.js';
 
 export const ID = 'codex';
@@ -102,6 +102,21 @@ async function requestUsage(http, settings, tokens) {
     return http.requestJson('GET', settings.get_string('codex-usage-url'), {headers});
 }
 
+/** Banked rate-limit resets: how many are stored and how many apply now. */
+export function parseExtras(payload) {
+    const extras = [];
+    const credits = payload.rate_limit_reset_credits;
+    if (credits && typeof credits.available_count === 'number') {
+        const available = credits.available_count;
+        const applicable = credits.applicable_available_count;
+        let value = String(available);
+        if (typeof applicable === 'number' && applicable !== available)
+            value += ` (${applicable} usable now)`;
+        extras.push({label: 'Banked resets', value});
+    }
+    return extras;
+}
+
 function isUnauthorized(e) {
     return e instanceof HttpError && (e.status === 401 || e.status === 403);
 }
@@ -136,7 +151,10 @@ export async function fetchUsage(http, settings) {
 
     const rateLimit = payload.rate_limit ?? {};
     const windows = [];
-    const toWindow = (id, w) => makeWindow(id, w.used_percent, w.reset_at);
+    // The window length varies by plan (a Pro Lite account gets a single
+    // weekly window as its primary), so title from limit_window_seconds.
+    const toWindow = (id, w) => makeWindow(id, w.used_percent, w.reset_at,
+        titleForWindowSeconds(w.limit_window_seconds));
     if (rateLimit.primary_window)
         windows.push(toWindow('primary', rateLimit.primary_window));
     if (rateLimit.secondary_window)
@@ -151,6 +169,7 @@ export async function fetchUsage(http, settings) {
         plan: payload.plan_type ? String(payload.plan_type) : undefined,
         account: payload.email ?? extractEmail(tokens) ?? undefined,
         limitReached: Boolean(rateLimit.limit_reached),
+        extras: parseExtras(payload),
     };
 }
 

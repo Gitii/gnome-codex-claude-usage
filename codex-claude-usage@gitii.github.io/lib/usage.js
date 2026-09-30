@@ -16,6 +16,8 @@
  * @property {string} [plan]
  * @property {string} [account]
  * @property {boolean} [limitReached]
+ * @property {{label: string, value: string}[]} [extras] - extra info rows
+ *   shown under the windows, e.g. banked resets
  * @property {string} [message] - error/hint text when state !== 'ok'
  */
 
@@ -28,6 +30,28 @@ export const WINDOW_TITLES = {
     primary: '5-hour window',
     secondary: 'Weekly window',
 };
+
+/**
+ * Title for a rate-limit window of a given length in seconds.
+ * Tolerates the slightly off values providers report.
+ */
+export function titleForWindowSeconds(seconds) {
+    const n = Number(seconds);
+    if (!Number.isFinite(n) || n <= 0)
+        return null;
+    const hours = n / 3600;
+    if (Math.abs(hours - 5) < 1)
+        return '5-hour window';
+    if (Math.abs(hours - 24) < 2)
+        return 'Daily window';
+    if (Math.abs(hours - 24 * 7) < 12)
+        return 'Weekly window';
+    if (Math.abs(hours - 24 * 30) < 48)
+        return 'Monthly window';
+    if (hours < 48)
+        return `${Math.round(hours)}-hour window`;
+    return `${Math.round(hours / 24)}-day window`;
+}
 
 /**
  * Turn an API key such as "seven_day_fable" into a readable title.
