@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    clampPercent, displayPercent, formatReset, makeWindow, panelWindow, severityClass, titleForKey,
+    clampPercent, displayPercent, formatReset, makeWindow, panelWindow, severityClass, titleForKey, titleForWindowSeconds,
 } from '../codex-claude-usage@gitii.github.io/lib/usage.js';
 
 test('clampPercent bounds and coerces', () => {
@@ -79,4 +79,15 @@ test('panelWindow max ignores per-model windows', () => {
         ],
     };
     assert.equal(panelWindow(usage, 'max').id, 'secondary');
+});
+
+test('titleForWindowSeconds recognises common window lengths', () => {
+    assert.equal(titleForWindowSeconds(18000), '5-hour window');
+    assert.equal(titleForWindowSeconds(86400), 'Daily window');
+    assert.equal(titleForWindowSeconds(604800), 'Weekly window');
+    assert.equal(titleForWindowSeconds(30 * 86400), 'Monthly window');
+    assert.equal(titleForWindowSeconds(3 * 3600), '3-hour window');
+    assert.equal(titleForWindowSeconds(3 * 86400), '3-day window');
+    assert.equal(titleForWindowSeconds(0), null);
+    assert.equal(titleForWindowSeconds(undefined), null);
 });
