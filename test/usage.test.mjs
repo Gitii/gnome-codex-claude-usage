@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    clampPercent, displayPercent, formatReset, makeWindow, panelWindow, severityClass, titleForKey, titleForWindowSeconds,
+    clampPercent, displayPercent, formatReset, makeWindow, panelWindow, panelWindows, severityClass, titleForKey, titleForWindowSeconds,
 } from '../codex-claude-usage@gitii.github.io/lib/usage.js';
 
 test('clampPercent bounds and coerces', () => {
@@ -90,4 +90,20 @@ test('titleForWindowSeconds recognises common window lengths', () => {
     assert.equal(titleForWindowSeconds(3 * 86400), '3-day window');
     assert.equal(titleForWindowSeconds(0), null);
     assert.equal(titleForWindowSeconds(undefined), null);
+});
+
+test('panelWindows stacks the standard windows', () => {
+    const usage = {
+        state: 'ok',
+        windows: [
+            makeWindow('primary', 20, null),
+            makeWindow('secondary', 30, null),
+            makeWindow('weekly_scoped:Fable', 99, null, 'Weekly · Fable'),
+        ],
+    };
+    assert.deepEqual(panelWindows(usage, 'both').map(w => w.id), ['primary', 'secondary']);
+    assert.deepEqual(panelWindows(usage, 'secondary').map(w => w.id), ['secondary']);
+    // single-window providers (e.g. a weekly-only Codex plan) stay one row
+    assert.deepEqual(panelWindows({state: 'ok', windows: [usage.windows[0]]}, 'both').map(w => w.id), ['primary']);
+    assert.deepEqual(panelWindows({state: 'ok', windows: []}, 'both'), []);
 });

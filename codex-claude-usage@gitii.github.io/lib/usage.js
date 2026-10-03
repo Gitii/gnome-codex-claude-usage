@@ -118,6 +118,25 @@ export function panelWindow(usage, mode) {
 }
 
 /**
+ * Windows shown in the panel. 'both' returns the standard windows (5-hour,
+ * then weekly) for a stacked display; other modes return one window.
+ *
+ * @param {ProviderUsage} usage
+ * @param {'primary'|'secondary'|'max'|'both'} mode
+ * @returns {UsageWindow[]}
+ */
+export function panelWindows(usage, mode) {
+    if (!usage || usage.windows.length === 0)
+        return [];
+    if (mode === 'both') {
+        const standard = usage.windows.filter(w => w.standard);
+        return standard.length ? standard : [usage.windows[0]];
+    }
+    const window = panelWindow(usage, mode);
+    return window ? [window] : [];
+}
+
+/**
  * Convert a used percentage into the value shown to the user.
  *
  * @param {number} usedPercent

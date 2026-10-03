@@ -57,7 +57,7 @@ let failed = false;
                 expect(codex.windows[0].title === '5-hour window' && codex.windows[1].title === 'Weekly window',
                     'codex window titles derived from limit_window_seconds');
                 expect(codex.extras.length === 1 && codex.extras[0].label === 'Banked resets' &&
-                    codex.extras[0].value === '2 (0 usable now)', 'codex banked resets parsed');
+                    codex.extras[0].value === '2', 'codex banked resets parsed (count only)');
                 expect(claude.state === 'ok', 'claude fetch succeeds');
                 expect(claude.windows[0].usedPercent === 81.5, 'claude primary keeps decimal utilization');
                 expect(claude.windows[1].id === 'secondary', 'claude secondary window present');

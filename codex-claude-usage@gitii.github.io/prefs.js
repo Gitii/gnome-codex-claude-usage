@@ -70,6 +70,7 @@ export default class CodexClaudeUsagePreferences extends ExtensionPreferences {
             ]);
         addComboRow(panel, settings, 'panel-window', 'Panel value',
             'Which rate-limit window the top-bar number follows', [
+                {value: 'both', label: '5-hour and weekly, stacked'},
                 {value: 'primary', label: '5-hour window'},
                 {value: 'secondary', label: 'Weekly window'},
                 {value: 'max', label: 'Whichever is more used'},
