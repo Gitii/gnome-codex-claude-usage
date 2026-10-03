@@ -28,6 +28,25 @@
   border-radius: 4px;
 }
 
+.ccu-panel-row {
+  spacing: 4px;
+}
+
+/* Stacked mode: two rows must fit the panel height */
+.ccu-stacked .ccu-panel-rows {
+  spacing: 0;
+}
+
+.ccu-stacked .ccu-segment-label {
+  font-size: 0.68em;
+}
+
+.ccu-stacked .ccu-panel-track,
+.ccu-stacked .ccu-panel-fill {
+  height: 4px;
+  border-radius: 2px;
+}
+
 .ccu-limit-reached {
   color: #e01b24;
 }

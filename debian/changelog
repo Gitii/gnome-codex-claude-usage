@@ -1,8 +1,8 @@
-gnome-shell-extension-codex-claude-usage (1.2.0-1) unstable; urgency=medium
+gnome-shell-extension-codex-claude-usage (1.3.0-1) unstable; urgency=medium
 
-  * Show the number of banked Codex rate-limit resets.
-  * Title Codex windows by the length the API reports (a weekly-only plan
-    was labelled "5-hour window").
+  * Show the 5-hour and weekly usage stacked in the top bar (new default
+    "Panel value" mode).
+  * Show Codex banked resets as a plain count.
 
- -- Gitii <gitii@users.noreply.github.com>  Wed, 30 Sep 2026 07:38:14 +0000
+ -- Gitii <gitii@users.noreply.github.com>  Sat, 03 Oct 2026 07:34:07 +0000
 

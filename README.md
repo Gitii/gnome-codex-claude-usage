@@ -24,8 +24,8 @@ D-Bus daemon**: the extension is pure GJS and reads the OAuth tokens that the
 - Per-model quotas: scoped limits the Claude API reports, such as the weekly
   Fable limit on Max plans, are listed under the two standard windows. Can be
   switched off in the settings.
-- Codex banked resets: the number of stored rate-limit resets, and how many
-  apply right now, shown under the Codex windows. Window titles follow the
+- Codex banked resets: the number of stored rate-limit resets, shown under
+  the Codex windows. Window titles follow the
   length the API reports, so a plan with only a weekly window is labelled
   as such.
 - Per-provider error states (not logged in, login expired, network error) so
@@ -111,7 +111,7 @@ Open them from the dropdown ("Settings…") or with
 | Codex / Claude Code | on/off per provider | both on |
 | Display mode | percentage, progress bar, both | percentage |
 | Percentages show | used, remaining | used |
-| Panel value | 5-hour window, weekly window, whichever is more used | 5-hour |
+| Panel value | 5-hour and weekly stacked, 5-hour window, weekly window, whichever is more used | stacked |
 | Show icons | on/off | on |
 | Per-model windows | on/off | on |
 | Refresh interval | 30 to 3600 s | 180 s |

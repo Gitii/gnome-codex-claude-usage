@@ -13,6 +13,7 @@
     <value nick="primary" value="0"/>
     <value nick="secondary" value="1"/>
     <value nick="max" value="2"/>
+    <value nick="both" value="3"/>
   </enum>
 
   <schema id="org.gnome.shell.extensions.codex-claude-usage" path="/org/gnome/shell/extensions/codex-claude-usage/">
@@ -43,9 +44,9 @@
       <description>Show percentages as used quota (Claude style) or remaining quota (Codex style).</description>
     </key>
     <key name="panel-window" enum="org.gnome.shell.extensions.codex-claude-usage.panel-window">
-      <default>'primary'</default>
+      <default>'both'</default>
       <summary>Window shown in the panel</summary>
-      <description>Which rate-limit window drives the panel value: the 5-hour window, the weekly window, or whichever is more used.</description>
+      <description>Which rate-limit window drives the panel value: the 5-hour window, the weekly window, whichever is more used, or both stacked on two lines.</description>
     </key>
     <key name="show-model-windows" type="b">
       <default>true</default>

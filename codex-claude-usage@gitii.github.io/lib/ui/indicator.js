@@ -10,27 +10,21 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-import {boxLayout} from '../compat.js';
+import {boxLayout, layoutParams} from '../compat.js';
 import {ProviderSection, UsageTrack} from './section.js';
 import {
     COUNTDOWN_THRESHOLD_SEC, STATE_OK,
-    displayPercent, panelWindow, secondsUntil, severityClass,
+    displayPercent, panelWindows, secondsUntil, severityClass,
 } from '../usage.js';
 
 const PANEL_BAR_WIDTH = 40;
 const SEVERITIES = ['usage-low', 'usage-medium', 'usage-high', 'usage-critical'];
 
-/** Icon + mini bar + label for one provider in the panel. */
-const PanelSegment = GObject.registerClass(
-class PanelSegment extends St.BoxLayout {
-    _init(iconFile) {
-        super._init({style_class: 'ccu-segment', y_align: Clutter.ActorAlign.CENTER});
-
-        this._icon = new St.Icon({
-            gicon: new Gio.FileIcon({file: iconFile}),
-            style_class: 'system-status-icon ccu-segment-icon',
-        });
-        this.add_child(this._icon);
+/** Mini bar + percentage for one window. */
+const PanelRow = GObject.registerClass(
+class PanelRow extends St.BoxLayout {
+    _init() {
+        super._init({style_class: 'ccu-panel-row', y_align: Clutter.ActorAlign.CENTER});
 
         this._track = new UsageTrack({
             style_class: 'ccu-panel-track',
@@ -49,38 +43,97 @@ class PanelSegment extends St.BoxLayout {
         this.add_child(this._label);
     }
 
-    applyDisplay({displayMode, showIcon}) {
-        this._icon.visible = showIcon;
+    applyDisplay(displayMode) {
         this._track.visible = displayMode !== 'text';
         this._label.visible = displayMode !== 'bar';
     }
 
-    setUsage(usage, {percentMode, panelWindowMode}) {
+    _clearSeverity() {
         for (const cls of SEVERITIES) {
             this._fill.remove_style_class_name(cls);
             this._label.remove_style_class_name(cls);
         }
-        this._icon.remove_style_class_name('ccu-limit-reached');
+    }
 
-        if (!usage) {
-            this._label.text = '…';
-            this._track.fraction = 0;
-            return;
-        }
-        if (usage.state !== STATE_OK) {
-            this._label.text = usage.state === 'error' ? '!' : '?';
-            this._track.fraction = 0;
-            return;
-        }
+    setPlaceholder(text) {
+        this._clearSeverity();
+        this._label.text = text;
+        this._track.fraction = 0;
+    }
 
-        const window = panelWindow(usage, panelWindowMode);
-        const used = window?.usedPercent ?? 0;
-        const shown = Math.round(displayPercent(used, percentMode));
-        this._label.text = `${shown}%`;
+    setWindow(window, percentMode) {
+        this._clearSeverity();
+        const used = window.usedPercent;
+        this._label.text = `${Math.round(displayPercent(used, percentMode))}%`;
         this._track.fraction = used / 100;
         this._fill.add_style_class_name(severityClass(used));
         if (used >= 90)
             this._label.add_style_class_name(severityClass(used));
+    }
+});
+
+/**
+ * Icon plus one or two PanelRows for one provider. In stacked mode the
+ * 5-hour and weekly rows sit on top of each other in a smaller font.
+ */
+const PanelSegment = GObject.registerClass(
+class PanelSegment extends St.BoxLayout {
+    _init(iconFile) {
+        super._init({style_class: 'ccu-segment', y_align: Clutter.ActorAlign.CENTER});
+
+        this._icon = new St.Icon({
+            gicon: new Gio.FileIcon({file: iconFile}),
+            style_class: 'system-status-icon ccu-segment-icon',
+        });
+        this.add_child(this._icon);
+
+        this._rowsBox = new St.BoxLayout({
+            style_class: 'ccu-panel-rows',
+            y_align: Clutter.ActorAlign.CENTER,
+            ...layoutParams(true),
+        });
+        this.add_child(this._rowsBox);
+        this._rows = [new PanelRow(), new PanelRow()];
+        for (const row of this._rows)
+            this._rowsBox.add_child(row);
+        this._rows[1].hide();
+        this._displayMode = 'text';
+    }
+
+    applyDisplay({displayMode, showIcon}) {
+        this._displayMode = displayMode;
+        this._icon.visible = showIcon;
+        for (const row of this._rows)
+            row.applyDisplay(displayMode);
+    }
+
+    _setStacked(stacked) {
+        if (stacked)
+            this.add_style_class_name('ccu-stacked');
+        else
+            this.remove_style_class_name('ccu-stacked');
+        this._rows[1].visible = stacked;
+    }
+
+    setUsage(usage, {percentMode, panelWindowMode}) {
+        this._icon.remove_style_class_name('ccu-limit-reached');
+
+        if (!usage || usage.state !== STATE_OK) {
+            this._setStacked(false);
+            const text = !usage ? '…' : usage.state === 'error' ? '!' : '?';
+            this._rows[0].setPlaceholder(text);
+            return;
+        }
+
+        const windows = panelWindows(usage, panelWindowMode);
+        if (windows.length === 0) {
+            this._setStacked(false);
+            this._rows[0].setPlaceholder('?');
+            return;
+        }
+        this._setStacked(windows.length > 1);
+        windows.slice(0, this._rows.length).forEach((w, i) => this._rows[i].setWindow(w, percentMode));
+
         if (usage.limitReached)
             this._icon.add_style_class_name('ccu-limit-reached');
     }

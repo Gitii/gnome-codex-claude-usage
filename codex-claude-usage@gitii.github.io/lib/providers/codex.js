@@ -102,18 +102,16 @@ async function requestUsage(http, settings, tokens) {
     return http.requestJson('GET', settings.get_string('codex-usage-url'), {headers});
 }
 
-/** Banked rate-limit resets: how many are stored and how many apply now. */
+/**
+ * Banked rate-limit resets. Only the stored count is shown: the API's
+ * applicable_available_count does not reflect whether a reset can be
+ * redeemed (users can apply one at any time).
+ */
 export function parseExtras(payload) {
     const extras = [];
     const credits = payload.rate_limit_reset_credits;
-    if (credits && typeof credits.available_count === 'number') {
-        const available = credits.available_count;
-        const applicable = credits.applicable_available_count;
-        let value = String(available);
-        if (typeof applicable === 'number' && applicable !== available)
-            value += ` (${applicable} usable now)`;
-        extras.push({label: 'Banked resets', value});
-    }
+    if (credits && typeof credits.available_count === 'number')
+        extras.push({label: 'Banked resets', value: String(credits.available_count)});
     return extras;
 }
 
