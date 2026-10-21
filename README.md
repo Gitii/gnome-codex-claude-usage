@@ -11,7 +11,7 @@ It merges the ideas of two single-provider extensions into one:
   [Haletran/claude-usage-extension](https://github.com/Haletran/claude-usage-extension) (Claude, GNOME 43/44)
 
 Unlike the Codex original there is **no Python service, no systemd unit and no
-D-Bus daemon**: the extension is pure GJS and reads the OAuth tokens that the
+D-Bus daemon of its own**: the extension is pure GJS and reads the OAuth tokens that the
 `codex` and `claude` command-line tools already store on disk.
 
 ## Features
@@ -74,7 +74,7 @@ gnome-extensions enable codex-claude-usage@gitii.github.io
 ```
 
 The package has no compiled code, so either file works on any GNOME 46 to 51
-system with `gnome-shell` and `gir1.2-soup-3.0` installed. Remove it with
+system with its declared dependencies installed. Remove it with
 `sudo apt remove gnome-shell-extension-codex-claude-usage`.
 
 ### From source
@@ -95,6 +95,11 @@ gnome-extensions enable codex-claude-usage@gitii.github.io
 which can be installed with `gnome-extensions install --force <zip>` or
 uploaded to extensions.gnome.org.
 
+Source/ZIP installations need Soup 3 and libsecret introspection plus a running
+desktop Secret Service. On Debian/Ubuntu install `gir1.2-soup-3.0
+gir1.2-secret-1 gnome-keyring`. Missing libsecret affects only Go secure storage,
+not Codex or Claude.
+
 ### Uninstall
 
 ```sh
@@ -109,6 +114,7 @@ Open them from the dropdown ("Settings…") or with
 | Setting | Values | Default |
 | --- | --- | --- |
 | Codex / Claude Code | on/off per provider | both on |
+| Show OpenCode Go | on/off | off |
 | Display mode | percentage, progress bar, both | percentage |
 | Percentages show | used, remaining | used |
 | Panel value | 5-hour and weekly stacked, 5-hour window, weekly window, whichever is more used | stacked |
@@ -116,6 +122,18 @@ Open them from the dropdown ("Settings…") or with
 | Per-model windows | on/off | on |
 | Refresh interval | 30 to 3600 s | 180 s |
 | Proxy URL | e.g. `http://localhost:3128` | system default |
+
+### OpenCode Go key setup
+
+In the OpenCode Go preferences group, enter an API key in the masked field and
+choose **Save key**. The extension owns one key in the desktop Secret Service
+keyring; it does not discover OpenCode CLI accounts. Saving replaces the old key,
+clears the entry, and enables Go. **Remove saved key** deletes it and disables Go.
+The saved key is never filled into the entry or revealed. Merely hiding Go keeps
+the key saved. Storage failures leave the previous key and visibility unchanged;
+unlock/start your desktop keyring and retry. There is no plaintext fallback.
+
+These preferences prepare secure storage; Go quota fetching is integrated separately.
 
 ## Migrating from the original extensions
 
@@ -133,6 +151,7 @@ Open them from the dropdown ("Settings…") or with
 make check           # syntax, schema, metadata and node unit tests
 make lint            # eslint (needs node/npx)
 make test-providers  # provider modules under gjs against the mock API
+make test-secret-store # isolated real Secret Service and settings notifications
 make test-nested     # nested GNOME Shell against the mock API (see below)
 ```
 
@@ -140,6 +159,13 @@ make test-nested     # nested GNOME Shell against the mock API (see below)
 (`gjs gir1.2-soup-3.0` on Ubuntu, `gjs libsoup3` on Fedora). It runs the real
 credential, HTTP and token-refresh code for every scenario without a GNOME
 Shell, and is what CI runs.
+
+`make test-secret-store` additionally needs `gir1.2-secret-1 gnome-keyring
+dbus-x11` (Debian/Ubuntu). It creates a disposable HOME, keyring, and private
+D-Bus session, using dummy keys only. It tests save/read/replace/remove, real
+GSettings notifications, and repeated locked reads without unlocking. Node tests
+simulate missing bindings, unavailable storage, and failed mutations; those
+failure cases do not depend on a real service. Never point tests at a real keyring.
 
 ### Testing without real accounts
 
@@ -216,7 +242,9 @@ dpkg-buildpackage -us -uc -b   # writes ../gnome-shell-extension-codex-claude-us
 
 - Tokens are read from the CLIs' files and sent only to the respective
   provider's API (`chatgpt.com` / `auth.openai.com` and `api.anthropic.com`).
-- Nothing is written to disk by the extension except its own GSettings.
+- Codex/Claude credential files remain read-only (refresh is in memory). Explicit
+  Go key saves/removals write only to Secret Service; GSettings contains visibility
+  and a nonsecret change counter, never the key. No credentials are logged.
 - Both APIs are undocumented and may change without notice.
 
 ## License

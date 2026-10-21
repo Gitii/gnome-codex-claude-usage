@@ -6,7 +6,7 @@ EXT_DIR   := $(or $(XDG_DATA_HOME),$(HOME)/.local/share)/gnome-shell/extensions/
 
 JS_FILES  := $(shell find $(SRC) -name '*.js')
 
-.PHONY: all schemas check lint zip install uninstall clean test-nested test-providers
+.PHONY: all schemas check lint zip install uninstall clean test-nested test-providers test-secret-store
 
 all: zip
 
@@ -44,6 +44,9 @@ test-nested: schemas
 
 test-providers:
 	./scripts/test-providers.sh
+
+test-secret-store: schemas
+	./scripts/test-secret-store.sh
 
 clean:
 	rm -rf $(BUILD) $(SRC)/schemas/gschemas.compiled

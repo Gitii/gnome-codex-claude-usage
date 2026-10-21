@@ -27,6 +27,15 @@
       <summary>Show Claude usage</summary>
       <description>Whether to show the Claude Code provider in the panel and menu.</description>
     </key>
+    <key name="show-opencode-go" type="b">
+      <default>false</default>
+      <summary>Show OpenCode Go usage</summary>
+    </key>
+    <key name="opencode-go-key-revision" type="u">
+      <default>0</default>
+      <summary>Nonsecret Go credential change notification</summary>
+      <description>Incremented after each successful key save or removal, including replacement while visible. Contains no credential data.</description>
+    </key>
     <key name="refresh-interval" type="i">
       <range min="30" max="3600"/>
       <default>180</default>

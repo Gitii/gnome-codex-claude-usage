@@ -12,7 +12,10 @@ Architecture: all
 Depends: ${misc:Depends},
          gnome-shell (>= 46),
          gnome-shell (<< 52),
-         gir1.2-soup-3.0
+         gir1.2-soup-3.0,
+         gir1.2-secret-1,
+         default-dbus-session-bus | dbus-session-bus,
+         gnome-keyring
 Description: GNOME Shell indicator for Codex and Claude Code plan usage
  Shows how much of your Codex (ChatGPT) and Claude Code plan quota you have
  used in the GNOME top bar: 5-hour and weekly windows, reset times, plan and
