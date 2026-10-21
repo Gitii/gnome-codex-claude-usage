@@ -87,5 +87,10 @@
       <summary>Claude usage endpoint</summary>
       <description>Endpoint used to fetch Claude Code usage. Only change this for testing against a mock server.</description>
     </key>
+    <key name="opencode-go-usage-url" type="s">
+      <default>'https://opencode.ai/zen/go/v1/usage'</default>
+      <summary>OpenCode Go usage endpoint</summary>
+      <description>Only change this for testing against a mock server.</description>
+    </key>
   </schema>
 </schemalist>

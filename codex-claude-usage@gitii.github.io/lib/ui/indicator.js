@@ -107,6 +107,10 @@ class PanelSegment extends St.BoxLayout {
             row.applyDisplay(displayMode);
     }
 
+    setIcon(file) {
+        this._icon.gicon = new Gio.FileIcon({file});
+    }
+
     _setStacked(stacked) {
         if (stacked)
             this.add_style_class_name('ccu-stacked');
@@ -176,6 +180,15 @@ export const UsageIndicator = GObject.registerClass({
             const separator = new PopupMenu.PopupSeparatorMenuItem();
             this._separators.set(provider.ID, separator);
             this.menu.addMenuItem(separator);
+            if (provider.LIGHT_ICON) {
+                const updateIcon = actor => {
+                    const color = actor.get_theme_node().get_foreground_color();
+                    const light = (color.red + color.green + color.blue) / 3 < 128;
+                    actor.setIcon(iconDir.get_child(light ? provider.LIGHT_ICON : provider.ICON));
+                };
+                segment.connect('style-changed', () => updateIcon(segment));
+                section.connect('style-changed', () => updateIcon(section));
+            }
         }
 
         this._refreshItem = new PopupMenu.PopupMenuItem('Refresh now');
@@ -186,7 +199,7 @@ export const UsageIndicator = GObject.registerClass({
         settingsItem.connect('activate', () => onSettings());
         this.menu.addMenuItem(settingsItem);
 
-        this._settingsIds = ['show-codex', 'show-claude', 'display-mode', 'show-icon',
+        this._settingsIds = ['show-codex', 'show-claude', 'show-opencode-go', 'display-mode', 'show-icon',
             'percent-mode', 'panel-window', 'show-model-windows'].map(key =>
             this._settings.connect(`changed::${key}`, () => this._applySettings()));
         this._applySettings();

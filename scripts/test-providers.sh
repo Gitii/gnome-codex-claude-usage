@@ -13,6 +13,8 @@ trap cleanup EXIT
 run_scenario() {
   local scenario="$1" mock_scenario="${2:-$1}"
   WORK="$(mktemp -d -t ccu-prov-XXXXXX)"
+  export HOME="$WORK/home" XDG_CONFIG_HOME="$WORK/config" XDG_DATA_HOME="$WORK/data" XDG_CACHE_HOME="$WORK/cache"
+  mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
   export MOCK_HOME="$WORK/mock"
   python3 "$ROOT/scripts/mock-api.py" --port "$PORT" --scenario "$mock_scenario" >"$WORK/mock.log" 2>&1 &
   MOCK_PID=$!
@@ -32,6 +34,7 @@ run_scenario() {
 }
 
 for s in normal codex-expired claude-expired limit; do run_scenario "$s"; done
+for s in go-optional go-malformed go-malformed-monthly go-401 go-403 go-500 go-non-json; do run_scenario "$s"; done
 run_scenario offline normal
 run_scenario no-credentials normal
 echo "All provider scenarios passed."
