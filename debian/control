@@ -16,11 +16,11 @@ Depends: ${misc:Depends},
          gir1.2-secret-1,
          default-dbus-session-bus | dbus-session-bus,
          gnome-keyring
-Description: GNOME Shell indicator for Codex and Claude Code plan usage
- Shows how much of your Codex (ChatGPT) and Claude Code plan quota you have
- used in the GNOME top bar: 5-hour and weekly windows, reset times, plan and
- account for each provider.
+Description: GNOME Shell indicator for Codex, Claude Code and OpenCode Go usage
+ Shows Codex (ChatGPT), Claude Code and OpenCode Go quota in the GNOME top
+ bar: two stacked windows, reset times and a detailed quota dropdown.
  .
  The extension reads the OAuth tokens stored by the codex and claude
- command-line tools; no background service is needed. It is not affiliated
- with OpenAI or Anthropic.
+ command-line tools. OpenCode Go uses a user-configured API key saved in the
+ desktop Secret Service keyring. No extension-owned background service is
+ needed. It is not affiliated with OpenAI, Anthropic or OpenCode.

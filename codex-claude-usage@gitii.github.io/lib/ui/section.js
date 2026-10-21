@@ -113,11 +113,12 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
         const box = boxLayout({vertical: true, x_expand: true, style_class: 'ccu-section'});
 
         const header = boxLayout({x_expand: true, style_class: 'ccu-section-header'});
-        header.add_child(new St.Icon({
+        this._icon = new St.Icon({
             gicon: new Gio.FileIcon({file: iconFile}),
             style_class: 'popup-menu-icon',
             icon_size: 16,
-        }));
+        });
+        header.add_child(this._icon);
         header.add_child(new St.Label({
             text: provider.NAME,
             style_class: 'ccu-section-title',
@@ -158,6 +159,10 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
         return this._provider;
     }
 
+    setIcon(file) {
+        this._icon.gicon = new Gio.FileIcon({file});
+    }
+
     setLoading() {
         this._status.text = 'Loading…';
     }
@@ -172,7 +177,8 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
         this._percentMode = percentMode;
 
         if (usage.state !== STATE_OK) {
-            this._status.text = usage.state === 'no-credentials' ? 'Not logged in'
+            this._status.text = this._provider.ID === 'opencode-go' ? 'Setup / access'
+                : usage.state === 'no-credentials' ? 'Not logged in'
                 : usage.state === 'expired' ? 'Login expired' : 'Error';
             this._barsBox.hide();
             this._info.hide();
@@ -182,7 +188,7 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
             return;
         }
 
-        this._status.text = usage.limitReached ? 'Limit reached' : '';
+        this._status.text = usage.limitReached ? (this._provider.ID === 'opencode-go' ? 'Included quota reached' : 'Limit reached') : '';
         this._message.hide();
         this._barsBox.show();
 

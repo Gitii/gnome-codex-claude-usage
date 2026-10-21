@@ -2,6 +2,7 @@ import Gio from 'gi://Gio';
 import Secret from 'gi://Secret?version=1';
 import {GoSecretStore} from '../codex-claude-usage@gitii.github.io/lib/secret-store.js';
 import {GoKeySettings} from '../codex-claude-usage@gitii.github.io/lib/go-key-settings.js';
+import * as Go from '../codex-claude-usage@gitii.github.io/lib/providers/opencode-go.js';
 
 function assert(value, message) {
     if (!value)
@@ -23,6 +24,12 @@ try {
     await keys.save('dummy-go-key-one');
     assert(await store.hasKey(), 'saved metadata');
     assert(await store.readKey() === 'dummy-go-key-one', 'read saved key');
+    const usage = await Go.fetchUsage({async requestJson(method, url, options) {
+        assert(method === 'GET' && url === 'https://opencode.ai/zen/go/v1/usage', 'configured provider endpoint');
+        assert(options.headers.Authorization === 'Bearer dummy-go-key-one', 'provider reads isolated saved key');
+        return {usage: {rolling: {percent: 0.5}}};
+    }}, settings);
+    assert(usage.state === 'ok' && usage.windows[0].usedPercent === 0.5, 'provider consumes secure key asynchronously');
     assert(settings.get_boolean('show-opencode-go'), 'save enables Go');
     await keys.save('dummy-go-key-two');
     assert(await store.readKey() === 'dummy-go-key-two', 'replacement');

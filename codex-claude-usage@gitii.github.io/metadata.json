@@ -1,7 +1,7 @@
 {
   "uuid": "codex-claude-usage@gitii.github.io",
   "name": "Codex & Claude Usage",
-  "description": "Shows Codex (ChatGPT) and Claude Code plan usage in the top bar: 5-hour and weekly limits, reset times, plan and account. Reads the tokens stored by the codex and claude CLIs; no background service needed. This extension talks to openai.com and anthropic.com services and is not affiliated with, funded by or endorsed by OpenAI or Anthropic.",
+  "description": "Shows Codex (ChatGPT), Claude Code and OpenCode Go usage in the top bar with a detailed quota dropdown. Reads Codex/Claude CLI tokens; Go uses a user-configured API key saved in the desktop keyring. No extension-owned background service. Connects to OpenAI, Anthropic and opencode.ai services. Not affiliated with, funded by or endorsed by these providers.",
   "shell-version": [
     "46",
     "47",

@@ -6,7 +6,8 @@ Files: *
 Copyright: 2026 Gitii
 License: GPL-3+
 
-Files: codex-claude-usage@gitii.github.io/icons/*.svg
+Files: codex-claude-usage@gitii.github.io/icons/claude-symbolic.svg
+       codex-claude-usage@gitii.github.io/icons/codex-symbolic.svg
 Copyright: 2025 thesvg.org
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,3 +34,11 @@ License: Expat
  .
  On Debian systems, the complete text of the GNU General Public License
  version 3 can be found in "/usr/share/common-licenses/GPL-3".
+
+Files: codex-claude-usage@gitii.github.io/icons/opencode-logo-*-square.svg
+Copyright: OpenCode brand owners
+License: OpenCode-brand-assets
+ Official artwork supplied at https://opencode.ai/brand.
+ No explicit asset license is supplied by the brand page; these marks are
+ not represented as GPL, MIT or public domain. See icons/OPENCODE-NOTICE.md
+ for download provenance. All trademark rights remain with their owners.

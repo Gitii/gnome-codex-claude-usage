@@ -4,6 +4,7 @@
 // results to the panel indicator. All network and file access lives in lib/.
 
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
@@ -12,9 +13,11 @@ import {FileWatcher} from './lib/credentials.js';
 import {UsageIndicator, addToPanel} from './lib/ui/indicator.js';
 import * as Codex from './lib/providers/codex.js';
 import * as Claude from './lib/providers/claude.js';
+import * as Go from './lib/providers/opencode-go.js';
+import {RefreshSlot} from './lib/refresh-slot.js';
 import {STATE_ERROR, errorUsage} from './lib/usage.js';
 
-const PROVIDERS = [Codex, Claude];
+const PROVIDERS = [Codex, Claude, Go];
 
 export default class CodexClaudeUsageExtension extends Extension {
     enable() {
@@ -22,7 +25,24 @@ export default class CodexClaudeUsageExtension extends Extension {
         this._http = new HttpClient(this._settings.get_string('proxy-url'));
         this._timerId = 0;
         this._inFlight = new Set();
-        this._generation = 0;
+        this._generation = (this._generation ?? 0) + 1;
+        this._goCancellable = new Gio.Cancellable();
+        this._goSlot = new RefreshSlot(
+            async () => {
+                const generation = this._generation;
+                this._inFlight.add(Go.ID);
+                this._indicator.setLoading(Go.ID);
+                this._indicator.setRefreshing(true);
+                try {
+                    return await Go.fetchUsage(this._http, this._settings, undefined, this._goCancellable);
+                } finally {
+                    if (generation === this._generation && this._indicator) {
+                        this._inFlight.delete(Go.ID);
+                        this._indicator.setRefreshing(this._inFlight.size > 0);
+                    }
+                }
+            },
+            usage => this._indicator?.setUsage(Go.ID, usage));
 
         this._indicator = new UsageIndicator({
             settings: this._settings,
@@ -39,7 +59,11 @@ export default class CodexClaudeUsageExtension extends Extension {
             this._settings.connect('changed::proxy-url', () => this._recreateHttp()),
             this._settings.connect('changed::show-codex', () => this._refreshAll()),
             this._settings.connect('changed::show-claude', () => this._refreshAll()),
+            this._settings.connect('changed::show-opencode-go', () => this._goChanged()),
+            this._settings.connect('changed::opencode-go-key-revision', () => this._goChanged()),
         ];
+        // Subscribe to external preferences writes even before our first save.
+        this._settings.get_uint('opencode-go-key-revision');
 
         this._watcher = new FileWatcher(
             PROVIDERS.flatMap(p => p.credentialPaths()),
@@ -51,6 +75,10 @@ export default class CodexClaudeUsageExtension extends Extension {
 
     disable() {
         this._generation++;
+        this._goSlot?.destroy();
+        this._goSlot = null;
+        this._goCancellable?.cancel();
+        this._goCancellable = null;
         this._stopTimer();
         this._watcher?.destroy();
         this._watcher = null;
@@ -69,6 +97,7 @@ export default class CodexClaudeUsageExtension extends Extension {
     _recreateHttp() {
         this._http?.destroy();
         this._http = new HttpClient(this._settings.get_string('proxy-url'));
+        this._goChanged();
         this._refreshAll();
     }
 
@@ -95,7 +124,21 @@ export default class CodexClaudeUsageExtension extends Extension {
         }
     }
 
+    _goChanged() {
+        this._goSlot.invalidate();
+        this._goCancellable.cancel();
+        this._goCancellable = new Gio.Cancellable();
+        this._indicator.setUsage(Go.ID, errorUsage(STATE_ERROR, 'Go configuration changed. Refreshing saved key…'));
+        if (this._indicator.isProviderEnabled(Go.ID))
+            this._goSlot.refresh(true).catch(e => console.error(e));
+    }
+
     async _refreshProvider(provider) {
+        if (provider.ID === Go.ID) {
+            this._indicator.setLoading(Go.ID);
+            await this._goSlot.refresh();
+            return;
+        }
         if (this._inFlight.has(provider.ID))
             return;
         this._inFlight.add(provider.ID);

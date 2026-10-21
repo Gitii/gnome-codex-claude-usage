@@ -93,6 +93,28 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):  # noqa: N802
         now = int(time.time())
         limit = self.scenario == "limit"
+        if self.path == "/zen/go/v1/usage":
+            if (self._bearer() != "go-dummy-key" or
+                    self.headers.get("Accept") != "application/json" or
+                    not self.headers.get("User-Agent", "").startswith("gnome-codex-claude-usage/")):
+                return self._json(400, {"error": "invalid test request"})
+            if self.scenario in ("go-401", "go-403", "go-500"):
+                return self._json(int(self.scenario[3:]), {"error": "test failure"})
+            if self.scenario == "go-non-json":
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"not JSON")
+                return
+            usage = {"rolling": {"percent": 100 if limit else 0.5,
+                                 "resetsAt": "2026-10-22T00:12:28.379Z"}}
+            if self.scenario != "go-optional":
+                usage.update({"weekly": {"percent": 1, "resetsAt": "unknown"},
+                              "monthly": {"percent": 92}})
+            if self.scenario == "go-malformed":
+                usage["rolling"]["percent"] = "invalid"
+            if self.scenario == "go-malformed-monthly":
+                usage["monthly"] = None
+            return self._json(200, {"usage": usage})
         if self.path.startswith("/backend-api/wham/usage"):
             if self._bearer() != FRESH_TOKEN:
                 return self._json(401, {"detail": "Unauthorized"})
@@ -177,7 +199,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--scenario", default="normal",
-                        choices=["normal", "codex-expired", "claude-expired", "limit"])
+                        choices=["normal", "codex-expired", "claude-expired", "limit", "go-optional",
+                                 "go-malformed", "go-malformed-monthly", "go-401", "go-403", "go-500", "go-non-json"])
     args = parser.parse_args()
 
     home = os.environ.get("MOCK_HOME") or tempfile.mkdtemp(prefix="ccu-mock-")
