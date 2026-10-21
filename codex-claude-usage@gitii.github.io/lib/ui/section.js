@@ -1,4 +1,4 @@
-// One provider's block in the dropdown: header, two usage bars, info line.
+// One provider's block in the dropdown: header, usage bars, info line.
 
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
@@ -10,7 +10,7 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {boxLayout, layoutParams} from '../compat.js';
 import {
-    STATE_OK, displayPercent, formatReset, severityClass,
+    STATE_OK, displayPercent, formatReset, menuWindows, severityClass,
 } from '../usage.js';
 
 const SEVERITIES = ['usage-low', 'usage-medium', 'usage-high', 'usage-critical'];
@@ -187,9 +187,7 @@ class ProviderSection extends PopupMenu.PopupBaseMenuItem {
         this._barsBox.show();
 
         const seen = new Set();
-        for (const window of usage.windows) {
-            if (!showModelWindows && !window.standard)
-                continue;
+        for (const window of menuWindows(usage, showModelWindows)) {
             let bar = this._bars.get(window.id);
             if (!bar) {
                 bar = new UsageBar(window.title);

@@ -3,7 +3,8 @@
 
 /**
  * @typedef {object} UsageWindow
- * @property {'primary'|'secondary'} id
+ * @property {string} id - primary, secondary, monthly, or a per-model key
+ * @property {boolean} standard - general quota, rather than a per-model extra
  * @property {string} title - human label, e.g. "5-hour window"
  * @property {number} usedPercent - 0..100
  * @property {number|null} resetsAt - unix epoch seconds or null if unknown
@@ -12,7 +13,7 @@
 /**
  * @typedef {object} ProviderUsage
  * @property {'ok'|'no-credentials'|'expired'|'error'} state
- * @property {UsageWindow[]} windows - ordered primary, secondary
+ * @property {UsageWindow[]} windows - ordered general quotas, then per-model extras
  * @property {string} [plan]
  * @property {string} [account]
  * @property {boolean} [limitReached]
@@ -29,6 +30,7 @@ export const STATE_ERROR = 'error';
 export const WINDOW_TITLES = {
     primary: '5-hour window',
     secondary: 'Weekly window',
+    monthly: 'Monthly window',
 };
 
 /**
@@ -88,8 +90,7 @@ export function makeWindow(id, usedPercent, resetsAt, title = null) {
     return {
         id,
         title: title ?? WINDOW_TITLES[id] ?? titleForKey(id),
-        /** true for the two standard windows, false for per-model extras */
-        standard: id === 'primary' || id === 'secondary',
+        standard: id === 'primary' || id === 'secondary' || id === 'monthly',
         usedPercent: clampPercent(usedPercent),
         resetsAt: Number.isFinite(resetsAt) && resetsAt > 0 ? Math.floor(resetsAt) : null,
     };
@@ -97,6 +98,11 @@ export function makeWindow(id, usedPercent, resetsAt, title = null) {
 
 export function errorUsage(state, message) {
     return {state, windows: [], message};
+}
+
+/** Dropdown quotas; only per-model extras obey the visibility switch. */
+export function menuWindows(usage, showModelWindows = true) {
+    return usage.windows.filter(w => showModelWindows || w.standard);
 }
 
 /**
@@ -118,7 +124,7 @@ export function panelWindow(usage, mode) {
 }
 
 /**
- * Windows shown in the panel. 'both' returns the standard windows (5-hour,
+ * Windows shown in the panel. 'both' returns primary and secondary (5-hour,
  * then weekly) for a stacked display; other modes return one window.
  *
  * @param {ProviderUsage} usage
@@ -129,8 +135,12 @@ export function panelWindows(usage, mode) {
     if (!usage || usage.windows.length === 0)
         return [];
     if (mode === 'both') {
-        const standard = usage.windows.filter(w => w.standard);
-        return standard.length ? standard : [usage.windows[0]];
+        const stacked = usage.windows.filter(w => w.id === 'primary' || w.id === 'secondary');
+        if (stacked.length)
+            return stacked;
+        // Preserve the per-model-only fallback without promoting monthly.
+        const fallback = usage.windows.find(w => !w.standard);
+        return fallback ? [fallback] : [];
     }
     const window = panelWindow(usage, mode);
     return window ? [window] : [];
