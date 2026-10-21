@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: 22
       - name: Install glib tools and gjs
-        run: sudo apt-get update && sudo apt-get install -y libglib2.0-bin zip gjs gir1.2-soup-3.0
+        run: sudo apt-get update && sudo apt-get install -y libglib2.0-bin zip gjs gir1.2-soup-3.0 gir1.2-secret-1 gnome-keyring dbus-x11
       - name: Syntax, schema and unit tests
         run: make check
       - name: Lint
@@ -22,6 +22,8 @@ jobs:
         run: make test-providers
       - name: Build zip
         run: make zip
+      - name: Isolated Secret Service tests
+        run: make test-secret-store
       - uses: actions/upload-artifact@v4
         with:
           name: extension-zip
