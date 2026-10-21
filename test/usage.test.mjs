@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    clampPercent, displayPercent, formatReset, makeWindow, panelWindow, panelWindows, severityClass, titleForKey, titleForWindowSeconds,
+    clampPercent, displayPercent, formatReset, makeWindow, menuWindows, panelWindow, panelWindows, severityClass, titleForKey, titleForWindowSeconds,
 } from '../codex-claude-usage@gitii.github.io/lib/usage.js';
 
 test('clampPercent bounds and coerces', () => {
@@ -106,4 +106,52 @@ test('panelWindows stacks the standard windows', () => {
     // single-window providers (e.g. a weekly-only Codex plan) stay one row
     assert.deepEqual(panelWindows({state: 'ok', windows: [usage.windows[0]]}, 'both').map(w => w.id), ['primary']);
     assert.deepEqual(panelWindows({state: 'ok', windows: []}, 'both'), []);
+});
+
+function monthlyUsage() {
+    return {
+        state: 'ok',
+        windows: [
+            makeWindow('primary', 42, null),
+            makeWindow('secondary', 78, null),
+            makeWindow('monthly', 92, null),
+            makeWindow('seven_day_fable', 99, null),
+        ],
+    };
+}
+
+test('monthly is a general quota and drives Highest usage, not stacked rows', () => {
+    const usage = monthlyUsage();
+    assert.equal(usage.windows[2].standard, true);
+    assert.equal(usage.windows[2].title, 'Monthly window');
+    assert.equal(panelWindow(usage, 'max').id, 'monthly');
+    assert.deepEqual(panelWindows(usage, 'both').map(w => w.id), ['primary', 'secondary']);
+    assert.equal(panelWindow(usage, 'primary').id, 'primary');
+    assert.equal(panelWindow(usage, 'secondary').id, 'secondary');
+});
+
+test('monthly stays in the menu when per-model windows are hidden', () => {
+    const usage = monthlyUsage();
+    assert.deepEqual(menuWindows(usage, false).map(w => w.id), ['primary', 'secondary', 'monthly']);
+    assert.deepEqual(menuWindows(usage).map(w => w.id), usage.windows.map(w => w.id));
+});
+
+test('stacked rows never substitute monthly for an absent weekly quota', () => {
+    const usage = monthlyUsage();
+    usage.windows = usage.windows.filter(w => w.id !== 'secondary');
+    assert.deepEqual(panelWindows(usage, 'both').map(w => w.id), ['primary']);
+    assert.equal(panelWindow(usage, 'secondary').id, 'primary');
+    assert.equal(panelWindow(usage, 'max').id, 'monthly');
+});
+
+test('selection retains weekly-only, empty, and nonstandard-only fallbacks', () => {
+    const weekly = makeWindow('secondary', 78, null);
+    const model = makeWindow('seven_day_fable', 99, null);
+    assert.deepEqual(panelWindows({windows: [weekly]}, 'both'), [weekly]);
+    assert.equal(panelWindow({windows: [weekly]}, 'primary'), weekly);
+    assert.deepEqual(panelWindows({windows: [model]}, 'both'), [model]);
+    assert.equal(panelWindow({windows: [model]}, 'max'), model);
+    assert.equal(panelWindow(null, 'max'), null);
+    assert.deepEqual(panelWindows(null, 'both'), []);
+    assert.deepEqual(panelWindows({windows: [makeWindow('monthly', 92, null)]}, 'both'), []);
 });
