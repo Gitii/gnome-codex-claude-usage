@@ -1,8 +1,9 @@
 # Codex & Claude Usage — GNOME Shell extension
 
 A top-bar indicator for **GNOME Shell 46 to 51** that shows how much of your
-**Codex (ChatGPT)** and **Claude Code** plan quota you have used, with the
-5-hour and weekly windows, reset times, plan and account for each provider.
+**Codex (ChatGPT)**, **Claude Code** and **OpenCode Go** quota you have used,
+with two stacked panel rows and a detailed dropdown. Go also reports monthly
+quota; plan and account details are shown only when supplied by a provider.
 
 It merges the ideas of two single-provider extensions into one:
 
@@ -12,12 +13,13 @@ It merges the ideas of two single-provider extensions into one:
 
 Unlike the Codex original there is **no Python service, no systemd unit and no
 D-Bus daemon of its own**: the extension is pure GJS and reads the OAuth tokens that the
-`codex` and `claude` command-line tools already store on disk.
+`codex` and `claude` command-line tools already store on disk. OpenCode Go uses
+an explicitly saved API key in your desktop keyring instead.
 
 ## Features
 
 - One panel button with a segment per provider: icon, percentage and/or a
-  small progress bar. Either provider can be hidden.
+  small progress bar. Each provider can be hidden.
 - Dropdown with a section per provider: 5-hour and weekly bars coloured by
   severity, "Resets in …" with a live countdown during the last five minutes,
   plan type, account e-mail, limit-reached warning.
@@ -48,8 +50,11 @@ D-Bus daemon of its own**: the extension is pure GJS and reads the OAuth tokens 
 - For Claude: [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
   logged in with a Claude subscription. Tokens are read from
   `$CLAUDE_CONFIG_DIR/.credentials.json` or `~/.claude/.credentials.json`.
+- For OpenCode Go: a Go API key saved in extension preferences, libsecret
+  introspection and a running desktop Secret Service/keyring. No OpenCode CLI
+  installation or credential discovery is needed.
 
-You need at least one of the two; the other provider can be switched off in
+You need at least one configured provider; the others can be switched off in
 the settings.
 
 ## Install
@@ -133,7 +138,19 @@ The saved key is never filled into the entry or revealed. Merely hiding Go keeps
 the key saved. Storage failures leave the previous key and visibility unchanged;
 unlock/start your desktop keyring and retry. There is no plaintext fallback.
 
-These preferences prepare secure storage; Go quota fetching is integrated separately.
+Saved-key changes take effect without reloading the extension. Background reads
+do not unlock the keyring: unlock it explicitly if Go reports locked storage.
+Go needs no CLI installation. Its 5-hour and optional weekly quotas occupy the
+two panel rows; monthly stays in the dropdown even with Per-model windows off.
+**Whichever is more used** considers all three Go quotas. Unknown resets show
+“—”; missing optional quotas are omitted, never invented as zero.
+
+Go uses `https://opencode.ai/zen/go/v1/usage`, verified on 2026-10-21 but not
+documented in the Console API reference. Endpoint stability, minimum restricted
+key permissions and non-subscriber responses remain unverified. A 401 asks you
+to replace the rejected/expired key; a 403 asks you to check workspace permissions
+and Go access. Neither establishes subscription status. Reaching 100% included
+quota does not establish that all inference is blocked (paid extra usage may apply).
 
 ## Migrating from the original extensions
 
@@ -169,10 +186,13 @@ failure cases do not depend on a real service. Never point tests at a real keyri
 
 ### Testing without real accounts
 
-`scripts/mock-api.py` serves fake Codex and Claude endpoints and writes fake
+`scripts/mock-api.py` serves fake Codex, Claude and Go endpoints and writes fake
 credential files. `scripts/test-nested.sh` starts it, points the extension at
 it through the hidden `*-url` settings keys, and launches
-`gnome-shell --nested --wayland` with the extension enabled. Scenarios:
+`gnome-shell --nested --wayland` with the extension enabled. The default harness
+uses a private bus, HOME/XDG directories and dummy keyring, seeding `go-dummy-key`
+through the production save helper. Requires `gnome-keyring` and libsecret.
+Never use real keys with the mock endpoints. Scenarios:
 
 ```sh
 scripts/test-nested.sh                        # normal usage
@@ -181,6 +201,36 @@ SCENARIO=claude-expired scripts/test-nested.sh
 SCENARIO=limit scripts/test-nested.sh         # limit reached
 REAL=1 scripts/test-nested.sh                 # your real credentials
 ```
+
+Go scenarios: `go-optional`, `go-malformed`, `go-malformed-monthly`, `go-401`,
+`go-403`, `go-500`, `go-non-json`. Provider tests also cover missing keys and
+offline operation, and controlled delayed responses for replace/remove/disable.
+Secret injection exists only at the test boundary, not in production settings
+or environment variables. All provider tests isolate HOME and XDG directories
+so a missing mock credential cannot fall back to a real CLI account.
+
+For headless GNOME versions supporting it, use
+`SHELL_ARGS='--headless --wayland --virtual-monitor 1400x900' scripts/test-nested.sh`.
+On versions where nested mode was renamed, pass the supported flags in `SHELL_ARGS`.
+Add `PROBE=1 CCU_EVIDENCE_DIR=/tmp/opencode/go-ui GSK_RENDERER=cairo` to run
+automated Shell-actor assertions and capture the rendered Go states. The test
+probe is installed only in the disposable profile and is not part of the ZIP.
+
+Manual UI checklist (use only the harness dummy key):
+
+- Open Settings; confirm masked entry, no saved-key reveal, Save/Remove and
+  saved/not-saved status. Save `go-dummy-key`, verify entry clears and Go enables;
+  remove, then save again without reloading Shell.
+- Inspect percentage/bar/both, used/remaining, stacked/primary/weekly/highest,
+  icon on/off, and monthly remaining visible with Per-model windows off.
+- Inspect both light and dark Shell themes: the supplied official square mark
+  should remain readable in panel and menu, without recoloring.
+- With the disposable keyring locked or service stopped, refresh and inspect
+  Go-only recovery guidance; Codex/Claude must remain usable.
+- Disable/re-enable the extension and hide/show Go; old values must not return
+  after removal/replacement. Manual and periodic refresh should still work.
+
+Actual UI validation evidence is recorded in `docs/testing/opencode-go.md`.
 
 ### Testing other GNOME versions
 
@@ -242,13 +292,20 @@ dpkg-buildpackage -us -uc -b   # writes ../gnome-shell-extension-codex-claude-us
 
 - Tokens are read from the CLIs' files and sent only to the respective
   provider's API (`chatgpt.com` / `auth.openai.com` and `api.anthropic.com`).
+  The saved Go key is sent only to `opencode.ai` by default. Hidden `*-url`
+  settings are for dummy-key mock testing only; changing them changes the
+  destination of credentials.
 - Codex/Claude credential files remain read-only (refresh is in memory). Explicit
   Go key saves/removals write only to Secret Service; GSettings contains visibility
   and a nonsecret change counter, never the key. No credentials are logged.
-- Both APIs are undocumented and may change without notice.
+- Usage APIs are undocumented and may change without notice.
 
 ## License
 
 GPL-3.0-or-later. The Claude and Codex brand marks in `icons/` are the
 monochrome icons from [thesvg.org](https://github.com/glincker/thesvg) (MIT);
-the trademarks belong to Anthropic and OpenAI respectively. Not affiliated with, funded by or endorsed by OpenAI or Anthropic.
+the trademarks belong to Anthropic and OpenAI respectively. The official
+OpenCode square marks are supplied unmodified from https://opencode.ai/brand;
+that page supplies no explicit asset license. See `icons/OPENCODE-NOTICE.md`
+in the extension for provenance. Not affiliated with, funded by or endorsed by
+OpenAI, Anthropic or OpenCode.

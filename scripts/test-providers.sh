@@ -12,7 +12,9 @@ trap cleanup EXIT
 
 run_scenario() {
   local scenario="$1" mock_scenario="${2:-$1}"
-  WORK="$(mktemp -d -t ccu-prov-XXXXXX)"
+  local temp_base="${TMPDIR:-/tmp}"
+  if [[ -d /tmp/opencode ]]; then temp_base=/tmp/opencode; fi
+  WORK="$(mktemp -d "$temp_base/ccu-prov-XXXXXX")"
   export HOME="$WORK/home" XDG_CONFIG_HOME="$WORK/config" XDG_DATA_HOME="$WORK/data" XDG_CACHE_HOME="$WORK/cache"
   mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
   export MOCK_HOME="$WORK/mock"
